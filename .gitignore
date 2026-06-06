@@ -1,0 +1,16 @@
+# General
+.DS_Store
+.vscode/
+.idea/
+
+# Backend (Java/Maven)
+backend/target/
+backend/.settings/
+backend/.classpath
+backend/.project
+backend/*.log
+
+# Frontend (Node)
+frontend/node_modules/
+frontend/dist/
+frontend/.env
