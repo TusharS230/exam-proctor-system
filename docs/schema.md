@@ -62,3 +62,29 @@ submission_id UUID NOT NULL REFERENCES exam_submissions(id) ON DELETE CASCADE,
 question_id UUID NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
 selected_option_id UUID REFERENCES options(id) ON DELETE SET NULL
 );
+
+
+// database connection
+1. What does spring.jpa.hibernate.ddl-auto=update do? (DBMS Automation)
+In simple beginner apps, developers manually create tables in pgAdmin 
+using SQL scripts before writing code. In modern enterprise Spring development, 
+Hibernate (our ORM engine) handles this.
+
+When you boot the server, Hibernate scans your Java project for classes decorated 
+with the @Entity annotation. If it finds a new class (like Organization.java), 
+it automatically writes and fires a native SQL statement (CREATE TABLE...) 
+across the network port to PostgreSQL. If you add a new column field to your 
+Java class later, it executes an ALTER TABLE... statement on the fly without 
+erasing your existing sample records.
+
+2. Network Sockets & Port Mapping (Computer Networks)
+localhost: A loopback network shortcut interface network address (127.0.0.1). 
+It tells your Operating System's network stack to bypass the physical router 
+hardware card entirely and direct traffic directly back inward to software running 
+on the exact same host system.
+
+5432: The standard TCP listener port registered globally for PostgreSQL. 
+Think of your computer as a large corporate office building and ports as individual 
+office desk extensions. Incoming data traffic directed to your computer's IP address 
+checks the port token extension to ensure it routes directly to the PostgreSQL engine 
+process rather than your browser or system audio stack.
