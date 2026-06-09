@@ -23,7 +23,6 @@ public class Organization {
     @Column(name = "name", nullable = false)
     private String name;
 
-
     @Column(name = "tenant_slug", nullable = false, unique = true, length = 100)
     private String tenantSlug;
 
