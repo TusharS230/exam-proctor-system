@@ -3,18 +3,21 @@ package com.proctor.backend.service;
 import com.proctor.backend.context.TenantContext;
 import com.proctor.backend.dto.CreateExamRequest;
 import com.proctor.backend.dto.QuestionDto;
+import com.proctor.backend.exception.ResourceNotFoundException;
 import com.proctor.backend.model.Exam;
 import com.proctor.backend.model.Organization;
 import com.proctor.backend.model.Question;
 import com.proctor.backend.repository.ExamRepository;
 import com.proctor.backend.repository.OrganizationRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -64,5 +67,21 @@ public class ExamService {
         // fire the transaction
         // because of cascadeType.ALL, saving the exam automatically saves all attached questions into the database
         return examRepository.save(exam);
+    }
+
+    @Transactional(readOnly = true)
+    public Exam getExamById(UUID examId) {
+        //identify who is asking
+        String tenantSlug = TenantContext.getCurrentTenant();
+        log.info("Fetching exam {} for tenant: {}", examId, tenantSlug);
+
+        // fetch the tenant's organization record
+        Organization organization = organizationRepository.findByTenantSlug(tenantSlug)
+                .orElseThrow(() -> new ResourceNotFoundException("Organization not found for tenant: " + tenantSlug));
+
+        // fetch the exam and verify it belongs to this exact organization
+        return examRepository.findById(examId)
+                .filter(exam -> exam.getOrganization().getId().equals(organization.getId()))
+                .orElseThrow(() -> new ResourceNotFoundException("Exam not found or you do not have permissionto view it"));
     }
 }
