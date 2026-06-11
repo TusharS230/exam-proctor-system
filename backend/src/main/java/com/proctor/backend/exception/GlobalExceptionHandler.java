@@ -29,11 +29,28 @@ public class GlobalExceptionHandler {
         return  new ResponseEntity<>(errorBody, HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, Object>> handleIllgalState(
+            IllegalStateException ex,
+            HttpServletRequest request) {
+
+        Map<String, Object> errorBody = new HashMap<>();
+        errorBody.put("timestamp", OffsetDateTime.now());
+        errorBody.put("status", HttpStatus.BAD_REQUEST.value());
+        errorBody.put("error", "Bad Request");
+        errorBody.put("message", ex.getMessage());
+        errorBody.put("path", request.getRequestURI());
+
+        return new ResponseEntity<>(errorBody, HttpStatus.BAD_REQUEST);
+    }
+
     // a fallback for any other generic crash to prevent leaking stack traces
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGenericException(
             Exception ex,
             HttpServletRequest request) {
+
+        ex.printStackTrace();
 
         Map<String, Object> errorBody = new HashMap<>();
         errorBody.put("timestamp", OffsetDateTime.now());
