@@ -76,28 +76,8 @@ public class ExamAttemptService {
             throw new IllegalStateException("this exam is no longer in progress");
         }
 
-        // map the exam's question into memory for ultra-fast lookups
-        Map<UUID, Question> officialQuestions = attempt.getExam().getQuestions().stream()
-                .collect(Collectors.toMap(Question::getId, q -> q));
-
-        List<Answer> answersToSave = new ArrayList<>();
-
-        // match the student's answer to the questions
-        if(request.getAnswers() != null) {
-            for (AnswerDto dto : request.getAnswers()) {
-                Question question = officialQuestions.get(dto.getQuestionId());
-
-                if (question != null) {
-                    Answer answer = Answer.builder()
-                            .examAttempt(attempt)
-                            .question(question)
-                            .providedAnswer(dto.getProvidedAnswer())
-                            .build();
-
-                    answersToSave.add(answer);
-                }
-            }
-        }
+        // match the student's incoming answers to the official questions
+        List<Answer> answersToSave = mapStudentAnswersToQuestions(request, attempt);
 
         // batch save all answers to postgresql
         answerRepository.saveAll(answersToSave);
@@ -107,5 +87,28 @@ public class ExamAttemptService {
         attempt.setCompletedAt(OffsetDateTime.now());
 
         return attemptRepository.save(attempt);
+    }
+
+    // Private helper methods
+    private List<Answer> mapStudentAnswersToQuestions(SubmitExamRequest request, ExamAttempt attempt) {
+        // map the exam's official questions into memory for ultra-fast lookups
+        Map<UUID, Question> officialQuestions = attempt.getExam().getQuestions().stream()
+                .collect(Collectors.toMap(Question::getId, q -> q));
+
+        List<Answer> answersToSave = new ArrayList<>();
+
+        if(request.getAnswers() != null) {
+            for(AnswerDto dto : request.getAnswers()) {
+                Question question = officialQuestions.get(dto.getQuestionId());
+                if(question != null) {
+                    answersToSave.add(Answer.builder()
+                            .examAttempt(attempt)
+                            .question(question)
+                            .providedAnswer(dto.getProvidedAnswer())
+                            .build());
+                }
+            }
+        }
+        return answersToSave;
     }
 }
