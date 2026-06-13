@@ -32,6 +32,9 @@ public class Answer {
     @Column(name = "provided_answer", columnDefinition = "TEXT")
     private String providedAnswer;
 
+    @Column(name = "is_correct")
+    private Boolean isCorrect;
+
     @Column(name = "marks_awarded")
     private  Integer marksAwarded;
 }

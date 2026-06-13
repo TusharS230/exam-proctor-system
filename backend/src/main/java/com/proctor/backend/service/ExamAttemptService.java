@@ -9,6 +9,7 @@ import com.proctor.backend.repository.AnswerRepository;
 import com.proctor.backend.repository.ExamAttemptRepository;
 import com.proctor.backend.repository.ExamRepository;
 import com.proctor.backend.repository.UserRepository;
+import com.proctor.backend.repository.QuestionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,7 @@ public class ExamAttemptService {
     private final AnswerRepository answerRepository;
     private final ExamRepository examRepository;
     private final UserRepository userRepository;
+    private final QuestionRepository questionRepository;
 
     // start the exam
     @Transactional
@@ -56,6 +58,7 @@ public class ExamAttemptService {
         ExamAttempt attempt = ExamAttempt.builder()
                 .exam(exam)
                 .student(student)
+                .status(AttemptStatus.IN_PROGRESS)
                 .build();
 
         return attemptRepository.save(attempt);
@@ -76,15 +79,28 @@ public class ExamAttemptService {
             throw new IllegalStateException("this exam is no longer in progress");
         }
 
-        // match the student's incoming answers to the official questions
+        // map, evaluate, and score the student's answers in memory
         List<Answer> answersToSave = mapStudentAnswersToQuestions(request, attempt);
 
         // batch save all answers to postgresql
         answerRepository.saveAll(answersToSave);
 
-        // lock the exam state
+        // count total correct answers from our processed list
+        long correctAnswersCount = answersToSave.stream()
+                .filter(Answer::getIsCorrect)
+                        .count();
+
+        // safely calculate the final percentage score
+        int totalQuestions = attempt.getExam().getQuestions().size();
+        int finalPercentageScore = totalQuestions > 0 ? (int) Math.round(((double) correctAnswersCount / totalQuestions) * 100.0) : 0;
+
+        // finalize the attempt records and save
         attempt.setStatus(AttemptStatus.SUBMITTED);
+        attempt.setTotalScore(finalPercentageScore);
         attempt.setCompletedAt(OffsetDateTime.now());
+
+        log.info("exam submission complete for attempt {}. score: {}% ({} / {})",
+                attemptId, finalPercentageScore, correctAnswersCount, totalQuestions);
 
         return attemptRepository.save(attempt);
     }
@@ -101,14 +117,25 @@ public class ExamAttemptService {
             for(AnswerDto dto : request.getAnswers()) {
                 Question question = officialQuestions.get(dto.getQuestionId());
                 if(question != null) {
+
+                    // evaluation algorithm: strip spaces and ignore casing
+                    boolean isCorrect = false;
+                    if(dto.getProvidedAnswer() != null && question.getCorrectAnswer() != null) {
+                        isCorrect = question.getCorrectAnswer().trim()
+                                .equalsIgnoreCase(dto.getProvidedAnswer().trim());
+                    }
+
                     answersToSave.add(Answer.builder()
                             .examAttempt(attempt)
                             .question(question)
                             .providedAnswer(dto.getProvidedAnswer())
+                            .isCorrect(isCorrect)
                             .build());
                 }
             }
         }
         return answersToSave;
     }
+
+
 }
