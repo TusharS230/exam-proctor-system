@@ -31,6 +31,9 @@ public class Question {
     @Column(name = "marks", nullable = false)
     private Integer marks;
 
+    @Column(name = "correct_answer", columnDefinition = "TEXT")
+    private String correctAnswer;
+
     // N:1 mapping - many questions belong to one specific exam
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "exam_id", nullable = false)
