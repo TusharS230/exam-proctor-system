@@ -36,4 +36,13 @@ public class OrganizationController {
         List<Organization> organizations = organizationRepository.findAll();
         return ResponseEntity.ok(organizations);
     }
+
+    @PostMapping("/{id}/admin")
+    public ResponseEntity<com.proctor.backend.model.User> createOrgAdmin(
+            @PathVariable java.util.UUID id,
+            @RequestBody com.proctor.backend.dto.CreateUserRequest request,
+            @org.springframework.beans.factory.annotation.Autowired com.proctor.backend.service.UserService userService) {
+        com.proctor.backend.model.User admin = userService.createOrgAdminForTenant(id, request);
+        return new ResponseEntity<>(admin, HttpStatus.CREATED);
+    }
 }

@@ -16,5 +16,8 @@ public class CreateExamRequest {
     private String description;
     private Integer durationMinutes;
 
+    private String scheduledStartTime;
+    private String scheduledEndTime;
+
     private List<QuestionDto> questions;
 }

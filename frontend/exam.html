@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Environment</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/exam.css">
+    <link rel="stylesheet" href="css/toast.css">
+    <!-- WebSocket Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+</head>
+<body class="exam-mode">
+
+    <header class="exam-header">
+        <div class="exam-title" id="examTitleDisplay">Loading Exam...</div>
+        <div class="timer" id="examTimer">--:--</div>
+    </header>
+
+    <main class="exam-container">
+        
+        <div id="examQuestionsContainer">
+            <div style="text-align: center; padding: 2rem;">
+                Loading your exam environment...
+            </div>
+        </div>
+
+        <div class="exam-footer">
+            <button class="btn-primary" id="submitExamBtn" style="width: 100%; display: none;">Submit Final Answers</button>
+        </div>
+
+    </main>
+
+
+    <script src="js/toast.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/websocket.js"></script>
+    <script src="js/exam.js"></script>
+</body>
+</html>

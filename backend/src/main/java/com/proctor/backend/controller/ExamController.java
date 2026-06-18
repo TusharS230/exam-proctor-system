@@ -30,4 +30,28 @@ public class ExamController {
         Exam exam = examService.getExamById(examId);
         return ResponseEntity.ok(exam);
     }
+
+    // GET Endpoint: Fetch all exams for the current organization
+    @GetMapping
+    public ResponseEntity<java.util.List<Exam>> getAllExams() {
+        return ResponseEntity.ok(examService.getAllExams());
+    }
+
+    // GET Endpoint: Fetch missed exams for the current student
+    @GetMapping("/missed")
+    public ResponseEntity<java.util.List<Exam>> getMissedExams() {
+        return ResponseEntity.ok(examService.getMissedExams());
+    }
+
+    @PostMapping("/{examId}/assign")
+    public ResponseEntity<Exam> assignExam(@PathVariable UUID examId, @RequestBody java.util.List<UUID> studentIds) {
+        Exam updatedExam = examService.assignExam(examId, studentIds);
+        return ResponseEntity.ok(updatedExam);
+    }
+
+    @PutMapping("/{examId}/status")
+    public ResponseEntity<Exam> updateExamStatus(@PathVariable UUID examId, @RequestParam String status) {
+        Exam updatedExam = examService.updateExamStatus(examId, status);
+        return ResponseEntity.ok(updatedExam);
+    }
 }
