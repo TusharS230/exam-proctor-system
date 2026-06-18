@@ -1,7 +1,7 @@
 class ApiClient {
     static BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
         ? 'http://localhost:8080/api/v1' 
-        : `${window.location.origin}/api/v1`;
+        : 'https://exam-proctor-system.onrender.com/api/v1';
     static activeRequests = 0;
 
     static startLoading() {
