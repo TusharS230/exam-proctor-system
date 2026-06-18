@@ -1,29 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const connectBtn = document.getElementById('connectBtn');
-    const tokenInput = document.getElementById('jwtToken');
-    const attemptInput = document.getElementById('attemptId');
-    const statusBadge = document.getElementById('connectionStatus');
-    const simButtons = document.querySelectorAll('.sim-btn');
-
-    function setStatus(isOnline) {
-        if (isOnline) {
-            statusBadge.className = 'status-badge status-online';
-            statusBadge.innerHTML = 'Proctoring Active';
-            simButtons.forEach(btn => btn.disabled = false);
-        } else {
-            statusBadge.className = 'status-badge status-offline';
-            statusBadge.innerHTML = 'Proctoring Offline';
-            simButtons.forEach(btn => btn.disabled = true);
-        }
-    }
-
-    window.proctorWS.onConnect(() => {
-        setStatus(true);
-    });
-
-    window.proctorWS.onDisconnect(() => {
-        setStatus(false);
-    });
 
     // Automatically load exam on page load
     let examIsActive = false;
@@ -44,7 +19,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             window.currentAttemptId = attempt.id;
-            document.getElementById('attemptId').value = attempt.id; // for simulation buttons to work
             
             // 2. Fetch the actual exam questions
             const examData = await ApiClient.get(`/exams/${attempt.exam.id}`);
@@ -200,27 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Boot
     initExam();
 
-    // Handle Violation Buttons
-    simButtons.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const attemptId = attemptInput.value.trim();
-            const violationType = e.target.dataset.type;
-            const details = e.target.dataset.details;
-            
-            if(!attemptId) {
-                alert("Please provide an Attempt ID first.");
-                return;
-            }
 
-            const success = window.proctorWS.sendViolation(attemptId, violationType, details);
-            if(success) {
-                // visual feedback
-                const originalText = e.target.textContent;
-                e.target.textContent = "Sent!";
-                setTimeout(() => e.target.textContent = originalText, 1000);
-            }
-        });
-    });
 
     // ==========================================
     // ANTI-CHEAT: Automated Browser Event Detection
@@ -228,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function sendAutomatedViolation(type, details) {
         if (examIsActive && window.proctorWS.isConnected) {
-            const attemptId = attemptInput.value.trim();
+            const attemptId = window.currentAttemptId;
             if(attemptId) {
                 window.proctorWS.sendViolation(attemptId, type, details);
             }

@@ -32,31 +32,6 @@
 
     </main>
 
-    <!-- PoC Violation Panel -->
-    <div class="simulation-panel">
-        <h4>Proctoring Environment (PoC Setup)</h4>
-        
-        <div style="margin-bottom: 1rem; display: none;">
-            <!-- Hidden inputs since we now auto-load -->
-            <input type="text" id="jwtToken" class="form-control" placeholder="JWT Token">
-            <input type="hidden" id="attemptId">
-            <button id="connectBtn" class="btn-primary">1. Init Environment</button>
-        </div>
-
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
-            <span style="font-size: 0.8rem; font-weight: 500;">Proctor Socket:</span>
-            <span id="connectionStatus" class="status-badge status-offline" style="font-size: 0.6rem;">Offline</span>
-        </div>
-
-        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-            <button class="btn-danger sim-btn" data-type="TAB_SWITCH" data-details="Candidate navigated away from the exam tab." disabled>Trigger Tab Switch</button>
-            <button class="btn-danger sim-btn" data-type="MULTIPLE_FACES" data-details="Multiple faces detected in webcam feed." disabled>Trigger Multi-Face</button>
-            <button class="btn-danger sim-btn" data-type="NO_FACE" data-details="Candidate face not visible." disabled>Trigger No Face</button>
-        </div>
-        <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem;">
-            *If connected, switching browser tabs will auto-trigger a violation.
-        </p>
-    </div>
 
     <script src="js/toast.js"></script>
     <script src="js/api.js"></script>

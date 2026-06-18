@@ -133,5 +133,5 @@ class ProctorWebSocket {
     }
 }
 
-// Initialize global instance for the app pointing to the Spring Boot backend
-window.proctorWS = new ProctorWebSocket('http://localhost:8080/ws-proctor');
+// Initialize global instance using dynamic base URL
+window.proctorWS = new ProctorWebSocket(ApiClient.BASE_URL.replace('/api/v1', '') + '/ws-proctor');
