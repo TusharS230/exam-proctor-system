@@ -133,5 +133,3 @@ class ProctorWebSocket {
     }
 }
 
-// Initialize global instance using dynamic base URL
-window.proctorWS = new ProctorWebSocket(ApiClient.BASE_URL.replace('/api/v1', '') + '/ws-proctor');
