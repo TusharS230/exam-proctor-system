@@ -35,7 +35,7 @@ public class Exam {
     // N:1 mapping - many exams belong to one organization
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organization_id", nullable = false)
-    @JsonIgnoreProperties("exam")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Organization organization;
 
     // 1:N mapping - one exam has many questions
@@ -43,8 +43,29 @@ public class Exam {
     @JsonIgnoreProperties("exam")
     private List<Question> questions;
 
+    // M:N mapping - exam assignments to specific students
+    @ManyToMany
+    @JoinTable(
+        name = "exam_assignments",
+        joinColumns = @JoinColumn(name = "exam_id"),
+        inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private List<User> assignedStudents;
+
     @Column(name = "created_at", updatable = false)
     private OffsetDateTime createdAt;
+
+    // ACTIVE, PAST, or FUTURE
+    @Column(name = "status", nullable = false, columnDefinition = "varchar(255) default 'ACTIVE'")
+    @Builder.Default
+    private String status = "ACTIVE";
+
+    @Column(name = "scheduled_start_time")
+    private OffsetDateTime scheduledStartTime;
+
+    @Column(name = "scheduled_end_time")
+    private OffsetDateTime scheduledEndTime;
 
     @PrePersist
     protected void onCreate() {

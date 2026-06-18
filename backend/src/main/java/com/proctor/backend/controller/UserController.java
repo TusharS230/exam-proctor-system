@@ -23,4 +23,47 @@ public class UserController {
         User savedUser = userService.createUser(request);
         return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
     }
+
+    @org.springframework.web.bind.annotation.GetMapping("/students")
+    public ResponseEntity<java.util.List<User>> getAllStudents() {
+        return ResponseEntity.ok(userService.getAllStudents());
+    }
+
+    @PostMapping("/students/{id}/revoke")
+    public ResponseEntity<Void> revokeAccess(@org.springframework.web.bind.annotation.PathVariable java.util.UUID id) {
+        userService.revokeAccess(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/students/bulk")
+    public ResponseEntity<java.util.List<User>> createBulkStudents(@RequestBody java.util.List<CreateUserRequest> requests) {
+        java.util.List<User> savedUsers = userService.createBulkStudents(requests);
+        return new ResponseEntity<>(savedUsers, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/students/{id}/reset-password")
+    public ResponseEntity<Void> resetPassword(
+            @org.springframework.web.bind.annotation.PathVariable java.util.UUID id,
+            @RequestBody java.util.Map<String, String> payload) {
+        userService.resetStudentPassword(id, payload.get("newPassword"));
+        return ResponseEntity.ok().build();
+    }
+
+    @org.springframework.web.bind.annotation.PutMapping("/me/password")
+    public ResponseEntity<Void> changeMyPassword(
+            java.security.Principal principal,
+            @RequestBody com.proctor.backend.dto.ChangePasswordRequest request) {
+        try {
+            userService.changeMyPassword(principal.getName(), request.getCurrentPassword(), request.getNewPassword());
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @org.springframework.web.bind.annotation.GetMapping("/me")
+    public ResponseEntity<User> getMe(java.security.Principal principal) {
+        User currentUser = userService.getUserByEmail(principal.getName());
+        return ResponseEntity.ok(currentUser);
+    }
 }

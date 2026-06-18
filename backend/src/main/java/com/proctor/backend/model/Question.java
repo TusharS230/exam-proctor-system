@@ -34,6 +34,11 @@ public class Question {
     @Column(name = "correct_answer", columnDefinition = "TEXT")
     private String correctAnswer;
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "question_options", joinColumns = @JoinColumn(name = "question_id"))
+    @Column(name = "option_text", columnDefinition = "TEXT")
+    private java.util.List<String> options;
+
     // N:1 mapping - many questions belong to one specific exam
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "exam_id", nullable = false)

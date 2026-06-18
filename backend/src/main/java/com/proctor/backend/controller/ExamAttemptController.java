@@ -18,13 +18,10 @@ public class ExamAttemptController {
     private final ExamAttemptService attemptService;
 
     // POST: start an exam
-    // /api/v1/attempts/start?examId=___&studentId=___
+    // /api/v1/attempts/start?examId=___
     @PostMapping("/start")
-    public ResponseEntity<ExamAttempt> startExam(
-            @RequestParam UUID examId,
-            @RequestParam UUID studentId) {
-
-        ExamAttempt attempt = attemptService.startExam(examId, studentId);
+    public ResponseEntity<ExamAttempt> startExam(@RequestParam UUID examId) {
+        ExamAttempt attempt = attemptService.startExam(examId);
         return new ResponseEntity<>(attempt, HttpStatus.CREATED);
     }
 
@@ -35,7 +32,43 @@ public class ExamAttemptController {
             @PathVariable UUID attemptId,
             @RequestBody SubmitExamRequest request) {
 
-        ExamAttempt completedAttempt = attemptService.submitExam(attemptId, request);
-        return ResponseEntity.ok(completedAttempt);
+        ExamAttempt attempt = attemptService.submitExam(attemptId, request);
+        return ResponseEntity.ok(attempt);
+    }
+
+    @GetMapping("/history")
+    public ResponseEntity<java.util.List<ExamAttempt>> getHistory() {
+        return ResponseEntity.ok(attemptService.getHistory());
+    }
+
+    // GET: fetch logs for an attempt
+    @GetMapping("/{attemptId}/logs")
+    public ResponseEntity<java.util.List<com.proctor.backend.model.ProctorLog>> getLogsForAttempt(@PathVariable UUID attemptId) {
+        return ResponseEntity.ok(attemptService.getLogsForAttempt(attemptId));
+    }
+
+    // GET: fetch active attempts for the dashboard
+    @GetMapping("/active")
+    public ResponseEntity<java.util.List<ExamAttempt>> getActiveAttempts() {
+        return ResponseEntity.ok(attemptService.getActiveAttempts());
+    }
+
+    // GET: fetch active attempt for the logged in student
+    @GetMapping("/my-active")
+    public ResponseEntity<ExamAttempt> getMyActiveAttempt() {
+        return ResponseEntity.ok(attemptService.getMyActiveAttempt());
+    }
+
+    @PostMapping("/{attemptId}/grade")
+    public ResponseEntity<Void> gradeAttempt(
+            @PathVariable UUID attemptId,
+            @RequestBody com.proctor.backend.dto.GradeSubmissionRequest request) {
+        attemptService.gradeAttempt(attemptId, request);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{attemptId}/answers")
+    public ResponseEntity<java.util.List<com.proctor.backend.dto.AnswerResponseDto>> getAnswersForAttempt(@PathVariable UUID attemptId) {
+        return ResponseEntity.ok(attemptService.getAnswersForAttempt(attemptId));
     }
 }

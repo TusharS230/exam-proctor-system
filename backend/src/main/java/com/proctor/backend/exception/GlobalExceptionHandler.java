@@ -44,6 +44,36 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorBody, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(org.springframework.security.core.AuthenticationException.class)
+    public ResponseEntity<Map<String, Object>> handleAuthenticationException(
+            org.springframework.security.core.AuthenticationException ex,
+            HttpServletRequest request) {
+
+        Map<String, Object> errorBody = new HashMap<>();
+        errorBody.put("timestamp", OffsetDateTime.now());
+        errorBody.put("status", HttpStatus.UNAUTHORIZED.value());
+        errorBody.put("error", "Unauthorized");
+        errorBody.put("message", "Invalid email or password");
+        errorBody.put("path", request.getRequestURI());
+
+        return new ResponseEntity<>(errorBody, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ResponseEntity<Map<String, Object>> handleAccessDeniedException(
+            org.springframework.security.access.AccessDeniedException ex,
+            HttpServletRequest request) {
+
+        Map<String, Object> errorBody = new HashMap<>();
+        errorBody.put("timestamp", OffsetDateTime.now());
+        errorBody.put("status", HttpStatus.FORBIDDEN.value());
+        errorBody.put("error", "Forbidden");
+        errorBody.put("message", ex.getMessage());
+        errorBody.put("path", request.getRequestURI());
+
+        return new ResponseEntity<>(errorBody, HttpStatus.FORBIDDEN);
+    }
+
     // a fallback for any other generic crash to prevent leaking stack traces
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGenericException(

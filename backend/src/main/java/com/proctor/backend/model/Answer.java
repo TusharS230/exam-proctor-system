@@ -22,11 +22,13 @@ public class Answer {
     // N:1 mapping - many answers belong to one specific exam attempt
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "exam_attempt_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private ExamAttempt examAttempt;
 
     // N:1 mapping - this answer is linked to a specific original question
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Question question;
 
     @Column(name = "provided_answer", columnDefinition = "TEXT")

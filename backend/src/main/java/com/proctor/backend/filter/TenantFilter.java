@@ -29,8 +29,8 @@ public class TenantFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
 
-        // 1. Bypass public endpoints (Login and Organization Setup)
-        if (path.startsWith("/api/v1/auth/") || path.startsWith("/api/v1/organizations")) {
+        // 1. Bypass public endpoints and WebSockets (WebSockets can't send custom HTTP headers during handshake)
+        if (path.startsWith("/api/v1/auth/") || path.startsWith("/api/v1/organizations") || path.startsWith("/ws-proctor")) {
             filterChain.doFilter(request, response);
             return;
         }

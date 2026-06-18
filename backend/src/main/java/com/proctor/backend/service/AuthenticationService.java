@@ -35,6 +35,10 @@ public class AuthenticationService {
         String jwtToken = jwtService.generateToken(user);
 
         // return it to the client
-        return AuthenticationResponse.builder().token(jwtToken).build();
+        return AuthenticationResponse.builder()
+                .token(jwtToken)
+                .role(user.getRole().name())
+                .tenantSlug(user.getOrganization() != null ? user.getOrganization().getTenantSlug() : "SYSTEM")
+                .build();
     }
 }
