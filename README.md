@@ -58,7 +58,6 @@ graph TD
 **Frontend:**
 - HTML5, CSS3, Vanilla JavaScript
 - Fetch API for RESTful integration
-- Custom CSS variables for dynamic theming (Dark/Light mode ready)
 
 **Database & Deployment:**
 - PostgreSQL (Hosted on Neon)
