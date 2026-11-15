@@ -1,115 +1,113 @@
 /* =========================================================
    layout.css
-   Page structure: left sidebar + main content area.
+   Page structure: a list of links on the left,
+   the page content on the right.
    ========================================================= */
 
 .app-container {
     min-height: 100vh;
 }
 
-/* ---------- Sidebar ---------- */
+/* ---------- Sidebar (plain list of links) ---------- */
 .sidebar {
     position: fixed;
     top: 0;
     left: 0;
     width: var(--sidebar-width);
     height: 100vh;
-    background-color: var(--blue);
-    color: var(--white);
+    background-color: var(--paper);
+    border-right: 1px solid var(--line);
     display: flex;
     flex-direction: column;
     z-index: 100;
 }
 
 .sidebar-header {
-    padding: 15px;
-    border-bottom: 1px solid #3a6a96;
+    padding: 25px 20px 12px;
 }
 
 .sidebar-logo {
-    font-size: 17px;
-    font-weight: bold;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 22px;
+    color: var(--blue);
 }
 
 .sidebar-nav {
     flex: 1;
-    padding: 10px 0;
+    padding: 5px 0;
     overflow-y: auto;
 }
 
 .nav-item {
     display: flex;
     align-items: center;
-    padding: 9px 15px;
-    color: var(--white);
-    text-decoration: none;
+    padding: 5px 20px;
+    color: var(--blue);
 }
 
 .nav-item:hover {
-    background-color: var(--blue-dark);
-    color: var(--white);
+    color: var(--blue-dark);
 }
 
+/* the page you are on: bold, black, not a link */
 .nav-item.active {
-    background-color: var(--white);
-    color: var(--blue);
+    color: var(--ink);
     font-weight: bold;
+    text-decoration: none;
+}
+
+.nav-item.active::before {
+    content: ">";
+    margin-right: 5px;
 }
 
 .sidebar-footer {
-    padding: 12px 15px;
-    border-top: 1px solid #3a6a96;
+    padding: 12px 20px;
+    border-top: 1px solid var(--line);
 }
 
 .user-profile {
-    display: flex;
-    align-items: center;
-    gap: 10px;
     cursor: pointer;
 }
 
-/* name and tenant under the avatar: the HTML marks them "muted", but on blue they need to be white */
-.sidebar-footer .muted,
-.sidebar-footer .bold {
-    color: var(--white);
+.user-profile:hover #sidebarName {
+    text-decoration: underline;
 }
 
+/* the letter avatar is not needed in this design */
 .avatar {
-    width: 30px;
-    height: 30px;
-    background-color: var(--white);
-    color: var(--blue);
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
+    display: none;
 }
 
 /* ---------- Main content ---------- */
 .main-content {
     margin-left: var(--sidebar-width);
-    padding: 20px 25px;
+    padding: 30px 45px 60px;
     max-width: calc(1100px + var(--sidebar-width));
 }
 
-/* page title row at the top of every page */
+/* page title with a line under it */
 .dashboard-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid var(--blue);
+    align-items: flex-end;
+    margin-bottom: 20px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--ink);
 }
 
 .dashboard-header h1 {
     margin-bottom: 0;
 }
 
+/* section heading with a dashed line under it */
 .section-title {
-    font-size: 16px;
-    margin-bottom: 8px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 19px;
+    font-weight: normal;
+    padding-bottom: 3px;
+    margin-bottom: 10px;
+    border-bottom: 1px dashed var(--line-dashed);
 }
 
 /* ---------- Phones and small screens ---------- */
@@ -118,10 +116,21 @@
         position: static;
         width: 100%;
         height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--line);
+    }
+
+    .sidebar-nav {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .nav-item {
+        padding: 4px 10px;
     }
 
     .main-content {
         margin-left: 0;
-        padding: 15px;
+        padding: 20px;
     }
 }

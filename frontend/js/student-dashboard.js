@@ -70,12 +70,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 datasets: [{
                     label: 'Score (%)',
                     data: data,
-                    borderColor: 'var(--primary-color)',
-                    backgroundColor: '#e8eef5',
+                    borderColor: '#1a4f8b', // canvas charts cannot read CSS variables, so real colours are used here
+                    backgroundColor: '#1a4f8b',
                     borderWidth: 2,
-                    tension: 0.3,
-                    fill: true,
-                    pointBackgroundColor: 'var(--primary-hover)',
+                    tension: 0,
+                    fill: false,
+                    pointBackgroundColor: '#1a4f8b',
                     pointRadius: 4
                 }]
             },
@@ -87,10 +87,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                         beginAtZero: true,
                         max: 100,
                         grid: {
-                            color: '#eeeeee'
+                            color: '#e2ddca'
                         },
                         ticks: {
-                            color: 'var(--text-secondary)'
+                            color: '#6b6758'
                         }
                     },
                     x: {
@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             display: false
                         },
                         ticks: {
-                            color: 'var(--text-secondary)',
+                            color: '#6b6758',
                             maxRotation: 45,
                             minRotation: 45
                         }
@@ -109,10 +109,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                         display: false
                     },
                     tooltip: {
-                        backgroundColor: 'var(--surface-color)',
-                        titleColor: 'var(--text-primary)',
-                        bodyColor: 'var(--text-primary)',
-                        borderColor: 'var(--border-color)',
+                        backgroundColor: '#fbfaf5',
+                        titleColor: '#2b2b2b',
+                        bodyColor: '#2b2b2b',
+                        borderColor: '#2b2b2b',
                         borderWidth: 1
                     }
                 }

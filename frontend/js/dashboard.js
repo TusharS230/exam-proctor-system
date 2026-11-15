@@ -235,19 +235,17 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderQuickAnalytics(stats) {
         const list = document.getElementById('quickAnalyticsList');
         list.innerHTML = `
-            <div class="grid gap-2">
-                <div class="padded bg-grey bordered flex space-between align-center">
-                    <span class="muted">Active Students</span>
-                    <span class="large bold text-blue">${stats.activeStudents}</span>
-                </div>
-                <div class="padded bg-grey bordered flex space-between align-center">
-                    <span class="muted">Completed Today</span>
-                    <span class="large bold text-blue">${stats.completedToday}</span>
-                </div>
-                <div class="padded bg-grey bordered border-red flex space-between align-center">
-                    <span class="text-red">Total Violations</span>
-                    <span class="large bold text-red">${stats.totalViolations}</span>
-                </div>
+            <div class="stat-row">
+                <span>Active students</span>
+                <span class="stat-number">${stats.activeStudents}</span>
+            </div>
+            <div class="stat-row">
+                <span>Completed exams</span>
+                <span class="stat-number">${stats.completedToday ?? 0}</span>
+            </div>
+            <div class="stat-row text-red">
+                <span>Violations</span>
+                <span class="stat-number">${stats.totalViolations}</span>
             </div>
         `;
     }

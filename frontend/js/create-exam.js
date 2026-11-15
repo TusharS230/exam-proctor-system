@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="mc-options-section hidden mb-2">
                 <label class="block mb-1 bold">Options (Select the radio button next to the correct answer)</label>
                 <div class="options-container"></div>
-                <button type="button" class="add-option-btn mt-1 small bordered">+ Add Option</button>
+                <button type="button" class="add-option-btn btn-secondary mt-1 small">+ Add Option</button>
             </div>
         `;
 

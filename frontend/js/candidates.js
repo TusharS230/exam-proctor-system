@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             tr.innerHTML = `
                 <td>${student.email}</td>
                 <td class="muted">${date}</td>
-                <td class="${statusClass}"><span class="bg-grey padded-sm small bordered">${statusText}</span></td>
+                <td class="${statusClass}"><span class="tag">${statusText}</span></td>
                 <td class="bold">${stats.count}</td>
                 <td class="${scoreClass}">${avgScore}</td>
                 <td class="text-right">

@@ -142,7 +142,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <th>Score</th>
             <th>Status</th>
             <th>Completed At</th>
-            <th><button class="view-btn back-btn bg-dark-grey text-white small no-border float-right">&larr; Back to Exams</button></th>
+            <th><button class="view-btn back-btn btn-secondary small float-right">&larr; Back to Exams</button></th>
         `;
         tbody.innerHTML = '';
 
@@ -181,7 +181,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             tr.innerHTML = `
                 <td>${attempt.student?.email || 'Unknown'}</td>
                 <td class="${scoreClass}">${scoreText}</td>
-                <td><span class="bg-grey padded-sm small bordered">${attempt.status}</span></td>
+                <td><span class="tag">${attempt.status}</span></td>
                 <td class="muted">${date}</td>
                 <td>
                     <button class="btn-primary toggle-logs-btn small" data-id="${attempt.id}">View Logs</button>
@@ -196,7 +196,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             logRow.style.display = 'none';
             logRow.innerHTML = `
                 <td class="padded" colspan="5">
-                    <div class="logs-container max-h-300 scroll-y bordered padded" id="logs-${attempt.id}">
+                    <div class="logs-container max-h-300 scroll-y" id="logs-${attempt.id}">
                         <div class="text-center muted">Loading logs...</div>
                     </div>
                 </td>
@@ -288,10 +288,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const initialMark = ans.marksAwarded != null ? ans.marksAwarded : 0;
 
                     container.innerHTML += `
-                        <div class="bg-grey padded mb-2 bordered">
+                        <div class="answer-block">
                             <div class="bold mb-1">Q${index + 1}: ${q.questionText}</div>
                             <div class="small muted mb-1">Provided Answer:</div>
-                            <div class="padded-sm mb-2 bordered">${providedAns}</div>
+                            <div class="answer-text">${providedAns}</div>
 
                             <div class="flex align-center space-between">
                                 <div>

@@ -81,7 +81,7 @@
                         <!-- Messages go here -->
                     </div>
                     <div class="reply-box line-above">
-                        <textarea class="full-width bordered bg-grey mb-1" id="replyContent" rows="3" placeholder="Type your reply"></textarea>
+                        <textarea class="form-input mb-1" id="replyContent" rows="3" placeholder="Type your reply"></textarea>
                         <button class="btn-primary" id="sendReplyBtn">Send Reply</button>
                     </div>
                 </div>
@@ -94,17 +94,17 @@
                     <form id="composeForm">
                         <div class="form-group">
                             <label>To Organization</label>
-                            <select class="full-width bordered bg-grey" id="composeToOrg" required>
+                            <select class="form-input" id="composeToOrg" required>
                                 <option value="" disabled selected>Loading organizations...</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label>Subject</label>
-                            <input type="text" id="composeSubject" required placeholder="Enter subject">
+                            <input type="text" id="composeSubject" class="form-input" required placeholder="Enter subject">
                         </div>
                         <div class="form-group">
                             <label>Message</label>
-                            <textarea class="full-width bordered" id="composeContent" rows="5" required placeholder="Type your message"></textarea>
+                            <textarea class="form-input" id="composeContent" rows="5" required placeholder="Type your message"></textarea>
                         </div>
                         <div class="flex gap-2 justify-end mt-3">
                             <button type="button" class="btn-secondary" id="cancelComposeBtn">Cancel</button>

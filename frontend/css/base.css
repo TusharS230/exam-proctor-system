@@ -5,18 +5,20 @@
    ========================================================= */
 
 /* ---------- Colours and sizes ---------- */
-/* Only 3 colours are used in the whole site:
-   blue  = main colour (sidebar, buttons, links)
-   grey  = backgrounds and borders
+/* The site looks like a page in a notebook:
+   paper = cream background
+   ink   = dark grey text and lines
+   blue  = links and main buttons
    red   = errors and violations                 */
 :root {
-    --blue: #1f4e79;
-    --blue-dark: #163a5c;
-    --grey-bg: #f2f2f2;
-    --grey-border: #cccccc;
-    --grey-text: #666666;
+    --paper: #fbfaf5;
+    --ink: #2b2b2b;
+    --blue: #1a4f8b;
+    --blue-dark: #0d2f57;
     --red: #b00020;
-    --text: #222222;
+    --line: #d8d4c4;        /* light ruled lines */
+    --line-dashed: #c9c3ad; /* dashed lines under headings */
+    --muted: #6b6758;       /* secondary text */
     --white: #ffffff;
 
     /* older names still used inside some JS files */
@@ -27,13 +29,13 @@
     --success: var(--blue);
     --danger: var(--red);
     --warning: var(--red);
-    --text-primary: var(--text);
-    --text-secondary: var(--grey-text);
-    --secondary-color: var(--grey-text);
-    --border-color: var(--grey-border);
-    --surface-color: var(--white);
-    --bg-color: var(--grey-bg);
-    --background-color: var(--grey-bg);
+    --text-primary: var(--ink);
+    --text-secondary: var(--muted);
+    --secondary-color: var(--muted);
+    --border-color: var(--line);
+    --surface-color: var(--paper);
+    --bg-color: var(--paper);
+    --background-color: var(--paper);
 
     --sidebar-width: 200px;
     --header-height: 50px;
@@ -47,23 +49,30 @@
 }
 
 body {
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 14px;
-    line-height: 1.5;
-    color: var(--text);
-    background-color: var(--grey-bg);
+    font-family: Verdana, Geneva, sans-serif;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--ink);
+    background-color: var(--paper);
 }
 
 /* ---------- Text ---------- */
-h1, h2, h3, h4 {
-    font-weight: bold;
+/* headings use a serif font, like titles in a printed page */
+h1, h2, h3 {
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: normal;
     margin-bottom: 10px;
 }
 
-h1 { font-size: 22px; }
-h2 { font-size: 18px; }
-h3 { font-size: 16px; }
-h4 { font-size: 14px; }
+h1 { font-size: 28px; }
+h2 { font-size: 20px; }
+h3 { font-size: 17px; }
+
+h4 {
+    font-size: 13px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
 
 p {
     margin-bottom: 10px;
@@ -77,10 +86,16 @@ a:hover {
     color: var(--blue-dark);
 }
 
+hr {
+    border: none;
+    border-top: 1px solid var(--line);
+    margin: 20px 0;
+}
+
 /* ---------- Buttons ---------- */
 button {
     font-family: inherit;
-    font-size: 14px;
+    font-size: 13px;
     cursor: pointer;
 }
 
@@ -89,24 +104,44 @@ button:disabled {
     cursor: not-allowed;
 }
 
+/* main action: solid blue */
 .btn-primary {
     background-color: var(--blue);
     color: var(--white);
     border: 1px solid var(--blue);
-    border-radius: 3px;
-    padding: 6px 14px;
+    padding: 5px 14px;
 }
 
 .btn-primary:hover {
     background-color: var(--blue-dark);
 }
 
+/* Cancel / Back / Close: just an outline */
+.btn-secondary,
+.btn-sm {
+    background-color: transparent;
+    color: var(--ink);
+    border: 1px solid var(--muted);
+    padding: 5px 14px;
+}
+
+.btn-secondary:hover,
+.btn-sm:hover {
+    color: var(--blue);
+    border-color: var(--blue);
+}
+
+.btn-sm {
+    padding: 2px 10px;
+    font-size: 12px;
+}
+
+/* dangerous actions (logout, close exam, revoke) */
 .btn-danger {
-    background-color: var(--white);
+    background-color: transparent;
     color: var(--red);
     border: 1px solid var(--red);
-    border-radius: 3px;
-    padding: 6px 14px;
+    padding: 5px 14px;
 }
 
 .btn-danger:hover {
@@ -114,71 +149,42 @@ button:disabled {
     color: var(--white);
 }
 
-/* white button for Cancel / Back / Close */
-.btn-secondary {
-    background-color: var(--white);
-    color: var(--text);
-    border: 1px solid #999999;
-    border-radius: 3px;
-    padding: 6px 14px;
-}
-
-.btn-secondary:hover {
-    border-color: var(--blue);
-    color: var(--blue);
-}
-
-/* smaller buttons used inside tables */
-.btn-sm {
-    background-color: var(--white);
-    color: var(--blue);
-    border: 1px solid var(--grey-border);
-    border-radius: 3px;
-    padding: 3px 10px;
-    font-size: 13px;
-}
-
-.btn-sm:hover {
-    border-color: var(--blue);
-}
-
 .btn-warning {
     color: var(--red);
     margin-right: 5px;
 }
 
-.btn-warning:hover {
-    border-color: var(--red);
-}
-
 /* ---------- Forms ---------- */
 .form-group {
-    margin-bottom: 12px;
+    margin-bottom: 14px;
 }
 
 .form-group label {
     display: block;
-    margin-bottom: 4px;
+    margin-bottom: 3px;
     font-weight: bold;
-    font-size: 13px;
+    font-size: 12px;
 }
 
 .form-control,
 .form-input {
     width: 100%;
-    padding: 6px 8px;
+    padding: 5px 7px;
     font-family: inherit;
-    font-size: 14px;
-    color: var(--text);
+    font-size: 13px;
+    color: var(--ink);
     background-color: var(--white);
-    border: 1px solid #999999;
-    border-radius: 3px;
+    border: 1px solid #b9b39e;
 }
 
 .form-control:focus,
 .form-input:focus {
     outline: 1px solid var(--blue);
     border-color: var(--blue);
+}
+
+.form-input:disabled {
+    background-color: transparent;
 }
 
 /* password box with a "Show" button inside it */
@@ -198,45 +204,43 @@ button:disabled {
     background: none;
     border: none;
     color: var(--blue);
-    font-size: 12px;
+    font-size: 11px;
+    text-decoration: underline;
     padding: 2px 6px;
 }
 
-.password-toggle-btn:hover {
-    text-decoration: underline;
-}
-
 /* ---------- Tables ---------- */
+/* no boxes: only lines between rows, like a ruled page */
 .table-container {
-    background-color: var(--white);
-    border: 1px solid var(--grey-border);
-    margin-bottom: 15px;
+    margin-bottom: 20px;
     overflow-x: auto;
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
-    background-color: var(--white);
 }
 
 th,
 td {
-    padding: 8px 10px;
+    padding: 8px 8px;
     text-align: left;
-    border: 1px solid var(--grey-border);
+    border-bottom: 1px solid var(--line);
 }
 
 th {
-    background-color: #e8e8e8;
-    font-size: 13px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: normal;
+    font-size: 14px;
+    border-bottom: 1px solid var(--ink);
 }
 
-tbody tr:nth-child(even) {
-    background-color: #fafafa;
+tbody tr:hover {
+    background-color: #f3f1e7;
 }
 
 /* hidden row under a report that shows the proctoring logs */
-.logs-row {
-    background-color: var(--grey-bg);
+.logs-row,
+.logs-row:hover {
+    background-color: transparent;
 }

@@ -16,7 +16,7 @@
 .large  { font-size: 18px; }
 .xlarge { font-size: 26px; }
 
-.muted      { color: var(--grey-text); }
+.muted      { color: var(--muted); }
 .text-blue  { color: var(--blue); }
 .text-red   { color: var(--red); }
 .text-white { color: var(--white); }
@@ -32,21 +32,21 @@
 }
 
 /* ---------- Backgrounds ---------- */
-.bg-grey      { background-color: var(--grey-bg); }
-.bg-dark-grey { background-color: var(--grey-text); color: var(--white); }
+.bg-grey      { background-color: #f3f1e7; }
+.bg-dark-grey { background-color: var(--muted); color: var(--white); }
 
 /* ---------- Borders ---------- */
-.bordered   { border: 1px solid var(--grey-border); }
+.bordered   { border: 1px solid var(--line); }
 .border-red { border-color: var(--red); }
 .no-border  { border: none; }
 
 .line-below {
-    border-bottom: 1px solid var(--grey-border);
+    border-bottom: 1px solid var(--line);
     padding-bottom: 6px;
 }
 
 .line-above {
-    border-top: 1px solid var(--grey-border);
+    border-top: 1px solid var(--line);
     padding-top: 10px;
 }
 

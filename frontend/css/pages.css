@@ -7,39 +7,34 @@
 body.auth-mode {
     display: flex;
     justify-content: center;
-    padding-top: 80px;
+    padding-top: 90px;
     min-height: 100vh;
 }
 
 .auth-container {
     width: 100%;
-    max-width: 360px;
+    max-width: 340px;
     padding: 0 15px;
 }
 
-.auth-card {
-    background-color: var(--white);
-    border: 1px solid var(--grey-border);
-    border-top: 4px solid var(--blue);
-    padding: 20px;
-}
-
 .auth-logo {
-    font-size: 20px;
-    font-weight: bold;
-    color: var(--blue);
-    margin-bottom: 15px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 30px;
+    padding-bottom: 6px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--ink);
 }
 
 .auth-btn {
     width: 100%;
     margin-top: 5px;
-    padding: 8px;
+    padding: 7px;
 }
 
 .auth-footer {
-    margin-top: 15px;
-    font-size: 13px;
+    margin-top: 18px;
+    font-size: 12px;
+    color: var(--muted);
 }
 
 .auth-footer p {
@@ -47,10 +42,11 @@ body.auth-mode {
 }
 
 /* ---------- Admin dashboard (dashboard.html) ---------- */
+/* two columns of notes */
 .dashboard-content {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 15px;
+    gap: 35px 50px;
 }
 
 .dashboard-panel {
@@ -64,11 +60,10 @@ body.auth-mode {
 }
 
 /* ---------- Create exam (create-exam.html) ---------- */
+/* each question is separated by a dashed line, not a box */
 .question-block {
-    border: 1px dashed var(--grey-border);
-    background-color: var(--white);
-    padding: 12px;
-    margin-bottom: 15px;
+    padding: 12px 0 16px;
+    border-bottom: 1px dashed var(--line-dashed);
 }
 
 .mc-option {
@@ -82,11 +77,13 @@ body.auth-mode {
 .grade-input {
     width: 60px;
     padding: 3px;
-    border: 1px solid #999999;
+    border: 1px solid #b9b39e;
+    background-color: var(--white);
 }
 
 .grade-input[readonly] {
-    background-color: var(--grey-bg);
+    background-color: transparent;
+    border-color: transparent;
 }
 
 /* ---------- Exam page (exam.html) ---------- */
@@ -95,68 +92,61 @@ body.auth-mode {
     top: 0;
     z-index: 50;
     height: var(--header-height);
-    padding: 0 20px;
-    background-color: var(--blue);
-    color: var(--white);
+    padding: 0 25px;
+    background-color: var(--paper);
+    border-bottom: 2px solid var(--ink);
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
 .exam-title {
-    font-size: 17px;
-    font-weight: bold;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 19px;
 }
 
 .timer {
     font-family: "Courier New", monospace;
-    font-size: 17px;
+    font-size: 18px;
     font-weight: bold;
 }
 
-/* last 5 minutes: timer turns into a red box */
+/* last 5 minutes: the timer turns red */
 .timer.timer-low {
-    background-color: var(--white);
     color: var(--red);
-    padding: 0 6px;
 }
 
 .exam-container {
-    max-width: 800px;
-    margin: 20px auto;
+    max-width: 760px;
+    margin: 25px auto;
     padding: 0 15px;
 }
 
 .question-card {
-    background-color: var(--white);
-    border: 1px solid var(--grey-border);
-    padding: 15px 18px;
-    margin-bottom: 15px;
+    padding: 16px 0 18px;
+    border-bottom: 1px dashed var(--line-dashed);
 }
 
 .question-number {
     display: block;
-    font-size: 13px;
-    font-weight: bold;
-    color: var(--grey-text);
-    margin-bottom: 6px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 15px;
+    color: var(--blue);
+    margin-bottom: 4px;
 }
 
 .question-text {
-    font-size: 15px;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
 }
 
 .options-list {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
 }
 
 .exam-footer {
     display: flex;
     justify-content: space-between;
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px solid var(--grey-border);
+    margin-top: 20px;
 }

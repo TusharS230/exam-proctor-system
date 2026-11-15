@@ -164,10 +164,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                         : `Pending / ${maxMarks}`;
 
                     container.innerHTML += `
-                        <div class="bg-grey padded mb-2 bordered">
+                        <div class="answer-block">
                             <div class="bold mb-1">Q${index + 1}: ${q.questionText}</div>
                             <div class="small muted mb-1">Your Answer:</div>
-                            <div class="padded-sm mb-2 bordered">${providedAns}</div>
+                            <div class="answer-text">${providedAns}</div>
 
                             <div class="flex align-center space-between">
                                 <div>
