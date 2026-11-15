@@ -1,0 +1,242 @@
+/* =========================================================
+   base.css
+   Colours, fonts, and default look of plain HTML elements
+   (text, links, buttons, forms, tables).
+   ========================================================= */
+
+/* ---------- Colours and sizes ---------- */
+/* Only 3 colours are used in the whole site:
+   blue  = main colour (sidebar, buttons, links)
+   grey  = backgrounds and borders
+   red   = errors and violations                 */
+:root {
+    --blue: #1f4e79;
+    --blue-dark: #163a5c;
+    --grey-bg: #f2f2f2;
+    --grey-border: #cccccc;
+    --grey-text: #666666;
+    --red: #b00020;
+    --text: #222222;
+    --white: #ffffff;
+
+    /* older names still used inside some JS files */
+    --primary-color: var(--blue);
+    --primary-hover: var(--blue-dark);
+    --primary: var(--blue);
+    --link-color: var(--blue);
+    --success: var(--blue);
+    --danger: var(--red);
+    --warning: var(--red);
+    --text-primary: var(--text);
+    --text-secondary: var(--grey-text);
+    --secondary-color: var(--grey-text);
+    --border-color: var(--grey-border);
+    --surface-color: var(--white);
+    --bg-color: var(--grey-bg);
+    --background-color: var(--grey-bg);
+
+    --sidebar-width: 200px;
+    --header-height: 50px;
+}
+
+/* ---------- Reset ---------- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text);
+    background-color: var(--grey-bg);
+}
+
+/* ---------- Text ---------- */
+h1, h2, h3, h4 {
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+h1 { font-size: 22px; }
+h2 { font-size: 18px; }
+h3 { font-size: 16px; }
+h4 { font-size: 14px; }
+
+p {
+    margin-bottom: 10px;
+}
+
+a {
+    color: var(--blue);
+}
+
+a:hover {
+    color: var(--blue-dark);
+}
+
+/* ---------- Buttons ---------- */
+button {
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-primary {
+    background-color: var(--blue);
+    color: var(--white);
+    border: 1px solid var(--blue);
+    border-radius: 3px;
+    padding: 6px 14px;
+}
+
+.btn-primary:hover {
+    background-color: var(--blue-dark);
+}
+
+.btn-danger {
+    background-color: var(--white);
+    color: var(--red);
+    border: 1px solid var(--red);
+    border-radius: 3px;
+    padding: 6px 14px;
+}
+
+.btn-danger:hover {
+    background-color: var(--red);
+    color: var(--white);
+}
+
+/* white button for Cancel / Back / Close */
+.btn-secondary {
+    background-color: var(--white);
+    color: var(--text);
+    border: 1px solid #999999;
+    border-radius: 3px;
+    padding: 6px 14px;
+}
+
+.btn-secondary:hover {
+    border-color: var(--blue);
+    color: var(--blue);
+}
+
+/* smaller buttons used inside tables */
+.btn-sm {
+    background-color: var(--white);
+    color: var(--blue);
+    border: 1px solid var(--grey-border);
+    border-radius: 3px;
+    padding: 3px 10px;
+    font-size: 13px;
+}
+
+.btn-sm:hover {
+    border-color: var(--blue);
+}
+
+.btn-warning {
+    color: var(--red);
+    margin-right: 5px;
+}
+
+.btn-warning:hover {
+    border-color: var(--red);
+}
+
+/* ---------- Forms ---------- */
+.form-group {
+    margin-bottom: 12px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.form-control,
+.form-input {
+    width: 100%;
+    padding: 6px 8px;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--text);
+    background-color: var(--white);
+    border: 1px solid #999999;
+    border-radius: 3px;
+}
+
+.form-control:focus,
+.form-input:focus {
+    outline: 1px solid var(--blue);
+    border-color: var(--blue);
+}
+
+/* password box with a "Show" button inside it */
+.password-input-wrapper {
+    position: relative;
+}
+
+.password-input-wrapper .form-control {
+    padding-right: 55px;
+}
+
+.password-toggle-btn {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--blue);
+    font-size: 12px;
+    padding: 2px 6px;
+}
+
+.password-toggle-btn:hover {
+    text-decoration: underline;
+}
+
+/* ---------- Tables ---------- */
+.table-container {
+    background-color: var(--white);
+    border: 1px solid var(--grey-border);
+    margin-bottom: 15px;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: var(--white);
+}
+
+th,
+td {
+    padding: 8px 10px;
+    text-align: left;
+    border: 1px solid var(--grey-border);
+}
+
+th {
+    background-color: #e8e8e8;
+    font-size: 13px;
+}
+
+tbody tr:nth-child(even) {
+    background-color: #fafafa;
+}
+
+/* hidden row under a report that shows the proctoring logs */
+.logs-row {
+    background-color: var(--grey-bg);
+}

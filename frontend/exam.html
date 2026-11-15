@@ -4,9 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Exam Environment</title>
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="css/exam.css">
-    <link rel="stylesheet" href="css/toast.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/pages.css">
+    <link rel="stylesheet" href="css/helpers.css">
     <!-- WebSocket Dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
@@ -19,15 +21,15 @@
     </header>
 
     <main class="exam-container">
-        
+
         <div id="examQuestionsContainer">
-            <div style="text-align: center; padding: 2rem;">
+            <div class="text-center padded">
                 Loading your exam environment...
             </div>
         </div>
 
         <div class="exam-footer">
-            <button class="btn-primary" id="submitExamBtn" style="width: 100%; display: none;">Submit Final Answers</button>
+            <button class="btn-primary full-width" id="submitExamBtn" style="display: none;">Submit Final Answers</button>
         </div>
 
     </main>

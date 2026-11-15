@@ -1,0 +1,162 @@
+/* =========================================================
+   pages.css
+   Styles that belong to one page only.
+   ========================================================= */
+
+/* ---------- Login page (index.html) ---------- */
+body.auth-mode {
+    display: flex;
+    justify-content: center;
+    padding-top: 80px;
+    min-height: 100vh;
+}
+
+.auth-container {
+    width: 100%;
+    max-width: 360px;
+    padding: 0 15px;
+}
+
+.auth-card {
+    background-color: var(--white);
+    border: 1px solid var(--grey-border);
+    border-top: 4px solid var(--blue);
+    padding: 20px;
+}
+
+.auth-logo {
+    font-size: 20px;
+    font-weight: bold;
+    color: var(--blue);
+    margin-bottom: 15px;
+}
+
+.auth-btn {
+    width: 100%;
+    margin-top: 5px;
+    padding: 8px;
+}
+
+.auth-footer {
+    margin-top: 15px;
+    font-size: 13px;
+}
+
+.auth-footer p {
+    margin: 0;
+}
+
+/* ---------- Admin dashboard (dashboard.html) ---------- */
+.dashboard-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.dashboard-panel {
+    min-width: 0;
+}
+
+@media (max-width: 900px) {
+    .dashboard-content {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ---------- Create exam (create-exam.html) ---------- */
+.question-block {
+    border: 1px dashed var(--grey-border);
+    background-color: var(--white);
+    padding: 12px;
+    margin-bottom: 15px;
+}
+
+.mc-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+/* ---------- Grading popup (reports.html) ---------- */
+.grade-input {
+    width: 60px;
+    padding: 3px;
+    border: 1px solid #999999;
+}
+
+.grade-input[readonly] {
+    background-color: var(--grey-bg);
+}
+
+/* ---------- Exam page (exam.html) ---------- */
+.exam-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    height: var(--header-height);
+    padding: 0 20px;
+    background-color: var(--blue);
+    color: var(--white);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.exam-title {
+    font-size: 17px;
+    font-weight: bold;
+}
+
+.timer {
+    font-family: "Courier New", monospace;
+    font-size: 17px;
+    font-weight: bold;
+}
+
+/* last 5 minutes: timer turns into a red box */
+.timer.timer-low {
+    background-color: var(--white);
+    color: var(--red);
+    padding: 0 6px;
+}
+
+.exam-container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 0 15px;
+}
+
+.question-card {
+    background-color: var(--white);
+    border: 1px solid var(--grey-border);
+    padding: 15px 18px;
+    margin-bottom: 15px;
+}
+
+.question-number {
+    display: block;
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--grey-text);
+    margin-bottom: 6px;
+}
+
+.question-text {
+    font-size: 15px;
+    margin-bottom: 12px;
+}
+
+.options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.exam-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid var(--grey-border);
+}

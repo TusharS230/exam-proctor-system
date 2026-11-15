@@ -22,16 +22,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const container = document.getElementById('studentListContainer');
             container.innerHTML = '';
             if (students && students.length === 0) {
-                container.innerHTML = '<div style="color:var(--text-secondary);">No students found.</div>';
+                container.innerHTML = '<div class="muted">No students found.</div>';
             }
             if (students) {
                 students.forEach(student => {
                     // Only show active students
                     if(!student.active) return;
                     const div = document.createElement('div');
-                    div.style.marginBottom = '0.5rem';
+                    div.className = 'mb-1';
                     div.innerHTML = `
-                        <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+                        <label class="flex align-center gap-1">
                             <input type="checkbox" class="student-checkbox" value="${student.id}" checked>
                             <span>${student.email}</span>
                         </label>
@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
         } catch(e) {
-            document.getElementById('studentListContainer').innerHTML = '<div style="color:var(--danger);">Connection error.</div>';
+            document.getElementById('studentListContainer').innerHTML = '<div class="text-red">Connection error.</div>';
         }
     }
     loadStudents();
@@ -64,42 +64,38 @@ document.addEventListener('DOMContentLoaded', () => {
         questionCount++;
         const qDiv = document.createElement('div');
         qDiv.className = 'question-block';
-        qDiv.style.marginBottom = '1.5rem';
-        qDiv.style.padding = '1rem';
-        qDiv.style.border = '1px dashed var(--border-color)';
-        qDiv.style.borderRadius = '4px';
         qDiv.dataset.questionId = questionCount;
 
         qDiv.innerHTML = `
-            <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <h4 style="margin:0;">Question ${questionCount}</h4>
-                <button type="button" class="remove-btn btn-danger" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">Remove</button>
+            <div class="flex space-between align-center mb-2">
+                <h4 class="m-0">Question ${questionCount}</h4>
+                <button type="button" class="remove-btn btn-danger small">Remove</button>
             </div>
-            <div style="margin-bottom: 1rem;">
-                <label style="display:block; margin-bottom: 0.5rem;">Question Text</label>
+            <div class="mb-2">
+                <label class="block mb-1">Question Text</label>
                 <textarea class="form-input q-text" required rows="2"></textarea>
             </div>
-            <div style="display:flex; gap: 1rem; margin-bottom: 1rem;">
-                <div style="flex: 1;">
-                    <label style="display:block; margin-bottom: 0.5rem;">Type</label>
+            <div class="flex gap-2 mb-2">
+                <div class="grow">
+                    <label class="block mb-1">Type</label>
                     <select class="form-input q-type" required>
                         <option value="TEXT_RESPONSE">Text Response</option>
                         <option value="MULTIPLE_CHOICE">Multiple Choice</option>
                     </select>
                 </div>
-                <div style="flex: 1;">
-                    <label style="display:block; margin-bottom: 0.5rem;">Marks</label>
+                <div class="grow">
+                    <label class="block mb-1">Marks</label>
                     <input type="number" class="form-input q-marks" value="5" required min="1">
                 </div>
             </div>
-            <div class="answer-section" style="display: none;">
-                <label style="display:block; margin-bottom: 0.5rem;">Correct Answer (Required for evaluation)</label>
+            <div class="answer-section hidden">
+                <label class="block mb-1">Correct Answer (Required for evaluation)</label>
                 <input type="text" class="form-input q-answer">
             </div>
-            <div class="mc-options-section" style="display: none; margin-bottom: 1rem;">
-                <label style="display:block; margin-bottom: 0.5rem; font-weight:600;">Options (Select the radio button next to the correct answer)</label>
+            <div class="mc-options-section hidden mb-2">
+                <label class="block mb-1 bold">Options (Select the radio button next to the correct answer)</label>
                 <div class="options-container"></div>
-                <button type="button" class="add-option-btn" style="margin-top: 0.5rem; padding: 0.4rem 0.8rem; font-size:0.8rem; border-radius:4px; border:1px solid var(--border-color); cursor:pointer;">+ Add Option</button>
+                <button type="button" class="add-option-btn mt-1 small bordered">+ Add Option</button>
             </div>
         `;
 
@@ -115,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 answerSection.style.display = 'none';
                 answerInput.required = false;
                 mcSection.style.display = 'block';
-                
+
                 if(optionsContainer.children.length === 0) {
                     addOptionBtn.click();
                     addOptionBtn.click();
@@ -129,18 +125,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         addOptionBtn.addEventListener('click', () => {
             const optDiv = document.createElement('div');
-            optDiv.style.display = 'flex';
-            optDiv.style.gap = '0.5rem';
-            optDiv.style.alignItems = 'center';
-            optDiv.style.marginBottom = '0.5rem';
             optDiv.className = 'mc-option';
-            
+
             optDiv.innerHTML = `
                 <input type="radio" name="correct_mc_${questionCount}" class="mc-correct-radio" required title="Select as correct answer">
-                <input type="text" class="form-input mc-option-text" placeholder="Option text..." style="flex:1;" required>
-                <button type="button" class="remove-opt-btn" style="color:var(--danger); background:none; border:none; cursor:pointer; font-size:1.2rem;">&times;</button>
+                <input type="text" class="form-input mc-option-text grow" placeholder="Option text..." required>
+                <button type="button" class="remove-opt-btn text-red no-border large">&times;</button>
             `;
-            
+
             optDiv.querySelector('.remove-opt-btn').addEventListener('click', () => {
                 optDiv.remove();
             });

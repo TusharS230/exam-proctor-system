@@ -14,12 +14,12 @@ document.addEventListener('DOMContentLoaded', () => {
             // 1. Fetch active attempt
             const attempt = await ApiClient.get('/attempts/my-active');
             if (!attempt) {
-                document.getElementById('examQuestionsContainer').innerHTML = "<div style='padding:2rem;text-align:center'>No active exams found for you.</div>";
+                document.getElementById('examQuestionsContainer').innerHTML = "<div class='padded text-center'>No active exams found for you.</div>";
                 return;
             }
 
             window.currentAttemptId = attempt.id;
-            
+
             // 2. Fetch the actual exam questions
             const examData = await ApiClient.get(`/exams/${attempt.exam.id}`);
 
@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (remainingMs <= 0) {
                 clearInterval(timerInterval);
                 timerDisplay.textContent = "00:00";
-                timerDisplay.style.color = "var(--danger)";
+                timerDisplay.classList.add('timer-low');
                 Toast.error("Time is up! Auto-submitting your exam...");
                 submitExam();
                 return;
@@ -66,11 +66,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const totalSeconds = Math.floor(remainingMs / 1000);
             const m = Math.floor(totalSeconds / 60);
             const s = totalSeconds % 60;
-            
+
             timerDisplay.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 
             if (totalSeconds < 300) { // last 5 minutes
-                timerDisplay.style.color = "var(--danger)";
+                timerDisplay.classList.add('timer-low');
             }
         }
 
@@ -82,18 +82,17 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderQuestions(questions) {
         const container = document.getElementById('examQuestionsContainer');
         container.innerHTML = '';
-        
+
         questions.forEach((q, index) => {
             const qCard = document.createElement('div');
             qCard.className = 'question-card';
-            qCard.style.marginBottom = '2rem';
-            
+
             let answerInputHTML = '';
             if (q.questionType === 'MULTIPLE_CHOICE' && q.options && q.options.length > 0) {
                 let optionsHtml = '';
                 q.options.forEach((opt, idx) => {
                     optionsHtml += `
-                        <label style="display:block; margin-bottom: 0.5rem; cursor:pointer;">
+                        <label class="block mb-1">
                             <input type="radio" name="student_mc_${q.id}" class="mc-radio-input" data-qid="${q.id}" value="${opt.replace(/"/g, '&quot;')}">
                             ${opt}
                         </label>
@@ -128,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function submitExam() {
         if (!examIsActive) return;
-        
+
         const attemptId = window.currentAttemptId;
         const answers = [];
 
@@ -160,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
             window.proctorWS.disconnect();
             if (timerInterval) clearInterval(timerInterval);
             examIsActive = false;
-            
+
             Toast.success("Exam submitted successfully!");
             setTimeout(() => {
                 window.location.href = "student-dashboard.html";
@@ -231,7 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             sendAutomatedViolation("DEV_TOOLS", "User attempted to open developer tools (F12).");
         }
-        
+
         // Prevent Ctrl/Cmd + C, V, X, P
         if ((e.ctrlKey || e.metaKey) && ['c', 'v', 'x', 'p', 'i', 'u'].includes(e.key.toLowerCase())) {
             e.preventDefault();

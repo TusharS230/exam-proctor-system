@@ -16,7 +16,7 @@ class ProctorWebSocket {
 
         const socket = new SockJS(this.wsUrl);
         this.stompClient = Stomp.over(socket);
-        
+
         // Disable debug logs in production
         this.stompClient.debug = null;
 
@@ -25,16 +25,16 @@ class ProctorWebSocket {
             'X-Tenant-ID': tenantId
         };
 
-        this.stompClient.connect(headers, 
+        this.stompClient.connect(headers,
             (frame) => {
                 this.isConnected = true;
                 this.onConnectCallbacks.forEach(cb => cb(frame));
-            }, 
+            },
             (error) => {
                 this.isConnected = false;
                 console.error('WebSocket connection error:', error);
                 this.onDisconnectCallbacks.forEach(cb => cb(error));
-                
+
                 // Implement basic retry logic
                 setTimeout(() => this.connect(token, tenantId), 5000);
             }

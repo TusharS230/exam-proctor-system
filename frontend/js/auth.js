@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
         const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value.trim();
 
@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
             sessionStorage.setItem('tenant_id', data.tenantSlug);
             sessionStorage.setItem('role', data.role);
             sessionStorage.setItem('email', email);
-            
+
             Toast.success('Login successful!');
 
             // Redirect to dashboard (or exam page based on role)
@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.location.href = 'student-dashboard.html';
                 }
             }, 1000);
-            
+
         } catch (error) {
             console.error('Error during login:', error);
             // Toast will automatically be shown by ApiClient, but we can reset the UI here

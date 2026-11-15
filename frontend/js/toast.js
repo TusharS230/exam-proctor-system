@@ -11,23 +11,23 @@ class Toast {
     static show(message, type = 'success', duration = 3000) {
         this.init();
         const container = document.getElementById('toast-container');
-        
+
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
-        
+
         const msgSpan = document.createElement('span');
         msgSpan.className = 'toast-message';
         msgSpan.textContent = message;
-        
+
         const closeBtn = document.createElement('button');
         closeBtn.className = 'toast-close';
         closeBtn.innerHTML = '&times;';
         closeBtn.onclick = () => this.remove(toast);
-        
+
         toast.appendChild(msgSpan);
         toast.appendChild(closeBtn);
         container.appendChild(toast);
-        
+
         setTimeout(() => {
             this.remove(toast);
         }, duration);

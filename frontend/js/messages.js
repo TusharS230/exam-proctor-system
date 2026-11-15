@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', async () => {
     const token = sessionStorage.getItem('jwt_token');
-    
+
     if (!token) {
         window.location.href = 'index.html';
         return;
@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const composeForm = document.getElementById('composeForm');
     const cancelComposeBtn = document.getElementById('cancelComposeBtn');
     const composeTo = document.getElementById('composeTo');
-    
+
     const threadSubject = document.getElementById('threadSubject');
     const threadMessagesContainer = document.getElementById('threadMessages');
     const backToInboxBtn = document.getElementById('backToInboxBtn');
@@ -58,22 +58,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (threadView.style.display === 'block' && currentThreadId === newMsg.threadId) {
             const isMe = false;
             const msgDiv = document.createElement('div');
-            msgDiv.style.alignSelf = isMe ? 'flex-end' : 'flex-start';
-            msgDiv.style.background = isMe ? 'var(--primary-color)' : 'var(--surface-color)';
-            msgDiv.style.color = isMe ? '#fff' : 'var(--text-primary)';
-            msgDiv.style.padding = '1rem';
-            msgDiv.style.borderRadius = '8px';
-            msgDiv.style.maxWidth = '70%';
-            msgDiv.style.border = isMe ? 'none' : '1px solid var(--border-color)';
-            
+            msgDiv.className = isMe ? 'msg-bubble mine' : 'msg-bubble';
+
             const senderName = isMe ? 'You' : newMsg.senderEmail;
             const timeString = new Date(newMsg.createdAt).toLocaleString();
-            
+
             msgDiv.innerHTML = `
-                <div style="font-size:0.8rem; margin-bottom:0.4rem; opacity:0.8;">
+                <div class="small mb-1">
                     <strong>${senderName}</strong> • ${timeString}
                 </div>
-                <div style="line-height:1.4;">
+                <div>
                     ${newMsg.content.replace(/\n/g, '<br>')}
                 </div>
             `;
@@ -83,7 +77,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Automatically mark as read if we are looking at the thread
             ApiClient.put(`/messages/${newMsg.id}/read`).catch(err => console.error(err));
         }
-        
+
         // Refresh the inbox table silently in the background
         if (inboxView.style.display === 'block') {
             loadInbox();
@@ -93,13 +87,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function loadInbox() {
         inboxView.style.display = 'block';
         threadView.style.display = 'none';
-        
+
         try {
             const messages = await ApiClient.get('/messages/inbox');
-            
+
             inboxTableBody.innerHTML = '';
             if (!messages || messages.length === 0) {
-                inboxTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No messages in your inbox.</td></tr>';
+                inboxTableBody.innerHTML = '<tr><td class="text-center" colspan="4">No messages in your inbox.</td></tr>';
                 return;
             }
 
@@ -116,17 +110,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // sort by date desc
                 thread.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
                 const latestMsg = thread[0];
-                
+
                 const tr = document.createElement('tr');
-                if (!latestMsg.read) tr.style.fontWeight = 'bold';
-                
+                if (!latestMsg.read) tr.classList.add('bold');
+
                 const senderText = latestMsg.organizationName ? `${latestMsg.senderEmail} (${latestMsg.organizationName})` : latestMsg.senderEmail;
-                
+
                 tr.innerHTML = `
                     <td>${latestMsg.subject || 'No Subject'}</td>
                     <td>From: ${senderText}</td>
                     <td>${new Date(latestMsg.createdAt).toLocaleString()}</td>
-                    <td><button class="btn-primary view-btn" data-thread="${latestMsg.threadId}" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">View Thread</button></td>
+                    <td><button class="btn-primary view-btn small" data-thread="${latestMsg.threadId}">View Thread</button></td>
                 `;
                 inboxTableBody.appendChild(tr);
             });
@@ -139,7 +133,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         } catch (error) {
             console.error('Error loading inbox:', error);
-            inboxTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:red;">Failed to load messages.</td></tr>';
+            inboxTableBody.innerHTML = '<tr><td class="text-center text-red" colspan="4">Failed to load messages.</td></tr>';
         }
     }
 
@@ -147,54 +141,42 @@ document.addEventListener('DOMContentLoaded', async () => {
         currentThreadId = threadId;
         inboxView.style.display = 'none';
         threadView.style.display = 'block';
-        threadMessagesContainer.innerHTML = '<div style="text-align:center;">Loading thread...</div>';
-        
+        threadMessagesContainer.innerHTML = '<div class="text-center">Loading thread...</div>';
+
         try {
             const messages = await ApiClient.get(`/messages/thread/${threadId}`);
             if (messages.length > 0) {
                 threadSubject.textContent = messages[0].subject || 'No Subject';
             }
-            
+
             threadMessagesContainer.innerHTML = '';
-            
+
             messages.forEach(msg => {
                 const isMe = msg.senderEmail === email;
-                
+
                 // mark as read if it's not mine and unread
                 if (!isMe && !msg.read) {
                     ApiClient.put(`/messages/${msg.id}/read`).catch(e => console.error(e));
                 }
 
                 const msgDiv = document.createElement('div');
-                msgDiv.style.padding = '1rem';
-                msgDiv.style.borderRadius = '8px';
-                msgDiv.style.maxWidth = '80%';
-                
-                if (isMe) {
-                    msgDiv.style.background = 'var(--primary-color)';
-                    msgDiv.style.color = 'white';
-                    msgDiv.style.alignSelf = 'flex-end';
-                } else {
-                    msgDiv.style.background = 'var(--surface-color)';
-                    msgDiv.style.border = '1px solid var(--border-color)';
-                    msgDiv.style.alignSelf = 'flex-start';
-                }
+                msgDiv.className = isMe ? 'msg-bubble mine' : 'msg-bubble';
 
                 msgDiv.innerHTML = `
-                    <div style="font-size: 0.8rem; margin-bottom: 0.5rem; opacity: 0.8;">
+                    <div class="small mb-1">
                         <b>${isMe ? 'You' : (msg.organizationName ? msg.senderEmail + ' (' + msg.organizationName + ')' : msg.senderEmail)}</b> - ${new Date(msg.createdAt).toLocaleString()}
                     </div>
-                    <div style="white-space: pre-wrap;">${msg.content}</div>
+                    <div class="pre-wrap">${msg.content}</div>
                 `;
                 threadMessagesContainer.appendChild(msgDiv);
             });
-            
+
             // scroll to bottom
             threadMessagesContainer.scrollTop = threadMessagesContainer.scrollHeight;
 
         } catch (error) {
             console.error('Error loading thread:', error);
-            threadMessagesContainer.innerHTML = '<div style="text-align:center; color:red;">Failed to load thread.</div>';
+            threadMessagesContainer.innerHTML = '<div class="text-center text-red">Failed to load thread.</div>';
         }
     }
 
@@ -259,12 +241,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     composeForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
         const subject = document.getElementById('composeSubject').value.trim();
         const content = document.getElementById('composeContent').value.trim();
-        
+
         if (!subject || !content) return;
-        
+
         let orgId = null;
         if (role === 'SUPER_ADMIN') {
             const orgSelect = document.getElementById('composeToOrg');
@@ -274,11 +256,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
         }
-        
+
         const submitBtn = composeForm.querySelector('button[type="submit"]');
         submitBtn.disabled = true;
         submitBtn.textContent = 'Sending...';
-        
+
         try {
             await ApiClient.post('/messages/send', {
                 subject: subject,
@@ -286,12 +268,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 threadId: null,
                 organizationId: orgId
             });
-            
+
             composeModal.style.display = 'none';
             composeForm.reset();
             alert('Message sent successfully!');
             await loadInbox();
-            
+
         } catch (error) {
             console.error('Error composing message:', error);
             alert('Failed to send message. Please try again.');

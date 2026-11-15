@@ -4,40 +4,38 @@ document.addEventListener('DOMContentLoaded', () => {
     const tenantId = sessionStorage.getItem('tenant_id');
 
     if(!token || !tenantId) {
-        document.getElementById('activeCandidatesList').innerHTML = 
-            '<div style="text-align:center; padding:1rem;">No token found. Please <a href="index.html">Login</a>.</div>';
+        document.getElementById('activeCandidatesList').innerHTML =
+            '<div class="text-center padded">No token found. Please <a href="index.html">Login</a>.</div>';
         return;
     }
 
     // UI Helpers
     function addAlertToFeed(alert) {
         const time = new Date(alert.timestamp).toLocaleTimeString();
-        
+
         const alertEl = document.createElement('div');
         alertEl.className = 'alert-item';
-        
-        // Color coding based on event type
-        let borderClass = 'var(--danger)';
-        if (alert.eventType === 'EXAM_STARTED' || alert.eventType === 'EXAM_COMPLETED' || alert.eventType === 'SYSTEM') {
-            borderClass = 'var(--link-color)';
-        }
 
-        alertEl.style.borderLeft = `4px solid ${borderClass}`;
+        // Color coding based on event type
+        // blue for normal events, red for violations
+        if (alert.eventType === 'EXAM_STARTED' || alert.eventType === 'EXAM_COMPLETED' || alert.eventType === 'SYSTEM') {
+            alertEl.classList.add('info');
+        }
 
         alertEl.innerHTML = `
             <div class="alert-header">
-                <span class="alert-type" style="color: ${borderClass}">${alert.eventType || 'VIOLATION'}</span>
+                <span class="alert-type">${alert.eventType || 'VIOLATION'}</span>
                 <span class="alert-time">${time}</span>
             </div>
             ${alert.studentEmail ? `
-            <div style="font-weight: 600; font-size: 0.9rem; margin-bottom: 0.25rem;">
-                ${alert.studentEmail} - <span style="color: var(--text-secondary); font-weight: normal;">${alert.examTitle || ''}</span>
+            <div class="bold small mb-1">
+                ${alert.studentEmail} - <span class="muted normal">${alert.examTitle || ''}</span>
             </div>` : ''}
             <div class="alert-body">
                 ${alert.details || 'Suspicious activity detected.'}
             </div>
         `;
-        
+
         // Add to top of the feed, remove the placeholder if present
         if (alertsFeed.innerHTML.includes('Waiting for connection...') || alertsFeed.innerHTML.includes('Feed cleared')) {
             alertsFeed.innerHTML = '';
@@ -49,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const clearAlertsBtn = document.getElementById('clearAlertsBtn');
     if (clearAlertsBtn) {
         clearAlertsBtn.addEventListener('click', () => {
-            alertsFeed.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 2rem;">Feed cleared. Waiting for new alerts...</div>';
+            alertsFeed.innerHTML = '<div class="muted text-center padded">Feed cleared. Waiting for new alerts...</div>';
             Toast.success('Live feed cleared locally');
         });
     }
@@ -59,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Subscribe globally to the tenant's alerts
         window.proctorWS.subscribeToTenantAlerts(tenantId, (alertData) => {
             addAlertToFeed(alertData);
-            
+
             // If the alert is a status change, reload the active candidates list and analytics
             if (alertData.eventType === 'EXAM_STARTED' || alertData.eventType === 'EXAM_COMPLETED') {
                 // Wait briefly before fetching active candidates to ensure backend transactions have fully committed
@@ -95,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error(e);
             const list = document.getElementById('activeCandidatesList');
             if (list) {
-                list.innerHTML = '<div style="text-align: center; color: var(--danger); padding: 1rem;">Failed to load active exams.</div>';
+                list.innerHTML = '<div class="text-center text-red padded">Failed to load active exams.</div>';
             }
         }
     }
@@ -105,22 +103,18 @@ document.addEventListener('DOMContentLoaded', () => {
         list.innerHTML = '';
 
         if(attempts.length === 0) {
-            list.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 1rem;">No active exams found.</div>';
+            list.innerHTML = '<div class="text-center muted padded">No active exams found.</div>';
             return;
         }
 
         attempts.forEach(attempt => {
             const div = document.createElement('div');
-            div.style.marginBottom = '1rem';
-            div.style.padding = '1rem';
-            div.style.border = '1px solid var(--border-color)';
-            div.style.borderRadius = '4px';
-            div.style.borderLeft = '4px solid var(--success)';
+            div.className = 'list-item';
 
             div.innerHTML = `
-                <div style="font-weight: 600; margin-bottom: 0.25rem;">${attempt.student?.email || 'Unknown Student'}</div>
-                <div style="font-size: 0.8rem; color: var(--text-secondary);">Exam: ${attempt.exam?.title || 'Unknown'}</div>
-                <div style="font-size: 0.75rem; color: var(--success); margin-top: 0.5rem;">• In Progress</div>
+                <div class="bold mb-1">${attempt.student?.email || 'Unknown Student'}</div>
+                <div class="small muted">Exam: ${attempt.exam?.title || 'Unknown'}</div>
+                <div class="small text-blue mt-1">• In Progress</div>
             `;
             list.appendChild(div);
         });
@@ -137,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error(e);
             const list = document.getElementById('activeExamsList');
             if (list) {
-                list.innerHTML = '<div style="text-align: center; color: var(--danger); padding: 1rem;">Failed to load exams.</div>';
+                list.innerHTML = '<div class="text-center text-red padded">Failed to load exams.</div>';
             }
         }
     }
@@ -145,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderFilteredExams() {
         const filterDropdown = document.getElementById('examsStatusFilter');
         const filterVal = filterDropdown ? filterDropdown.value : 'ACTIVE';
-        
+
         let filteredExams = allExams;
         if (filterVal !== 'ALL') {
             filteredExams = allExams.filter(e => e.status === filterVal);
@@ -158,37 +152,34 @@ document.addEventListener('DOMContentLoaded', () => {
         list.innerHTML = '';
 
         if(exams.length === 0) {
-            list.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 1rem;">No exams available.</div>';
+            list.innerHTML = '<div class="text-center muted padded">No exams available.</div>';
             return;
         }
 
         exams.forEach(exam => {
             const div = document.createElement('div');
-            div.style.marginBottom = '1rem';
-            div.style.padding = '1rem';
-            div.style.border = '1px solid var(--border-color)';
-            div.style.borderRadius = '4px';
-            div.style.borderLeft = `4px solid ${exam.status === 'ACTIVE' ? 'var(--success)' : (exam.status === 'PAST' ? 'var(--danger)' : 'var(--link-color)')}`;
+            div.className = 'list-item';
+            if (exam.status === 'PAST') div.classList.add('closed');
 
             let actionBtn = '';
             if (exam.status === 'ACTIVE') {
-                actionBtn = `<button class="btn-primary toggle-status-btn" data-id="${exam.id}" data-action="PAST" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; background: var(--danger);">Close Exam</button>`;
+                actionBtn = `<button class="btn-danger toggle-status-btn small" data-id="${exam.id}" data-action="PAST">Close Exam</button>`;
             } else if (exam.status === 'SCHEDULED' || exam.status === 'PAST') {
-                actionBtn = `<button class="btn-primary toggle-status-btn" data-id="${exam.id}" data-action="ACTIVE" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; background: var(--success);">Activate</button>`;
+                actionBtn = `<button class="btn-primary toggle-status-btn small" data-id="${exam.id}" data-action="ACTIVE">Activate</button>`;
             }
 
-            let timeInfo = `<div style="font-size: 0.8rem; color: var(--text-secondary);">Duration: ${exam.durationMinutes} mins</div>`;
+            let timeInfo = `<div class="small muted">Duration: ${exam.durationMinutes} mins</div>`;
             if (exam.scheduledStartTime) {
-                timeInfo += `<div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">Start: ${new Date(exam.scheduledStartTime).toLocaleString()}</div>`;
+                timeInfo += `<div class="small muted mt-1">Start: ${new Date(exam.scheduledStartTime).toLocaleString()}</div>`;
             }
             if (exam.scheduledEndTime) {
-                timeInfo += `<div style="font-size: 0.75rem; color: var(--text-secondary);">End: ${new Date(exam.scheduledEndTime).toLocaleString()}</div>`;
+                timeInfo += `<div class="small muted">End: ${new Date(exam.scheduledEndTime).toLocaleString()}</div>`;
             }
 
             div.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div class="flex space-between align-start">
                     <div>
-                        <div style="font-weight: 600; margin-bottom: 0.25rem;">${exam.title}</div>
+                        <div class="bold mb-1">${exam.title}</div>
                         ${timeInfo}
                     </div>
                     <div>${actionBtn}</div>
@@ -224,7 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error(e);
             const list = document.getElementById('quickAnalyticsList');
             if (list) {
-                list.innerHTML = '<div style="text-align: center; color: var(--danger); padding: 1rem;">Failed to load analytics.</div>';
+                list.innerHTML = '<div class="text-center text-red padded">Failed to load analytics.</div>';
             }
         }
     }
@@ -232,18 +223,18 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderQuickAnalytics(stats) {
         const list = document.getElementById('quickAnalyticsList');
         list.innerHTML = `
-            <div style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
-                <div style="padding: 1rem; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-weight: 500; color: var(--text-secondary);">Active Students</span>
-                    <span style="font-size: 1.5rem; font-weight: 600; color: var(--success);">${stats.activeStudents}</span>
+            <div class="grid gap-2">
+                <div class="padded bg-grey bordered flex space-between align-center">
+                    <span class="muted">Active Students</span>
+                    <span class="large bold text-blue">${stats.activeStudents}</span>
                 </div>
-                <div style="padding: 1rem; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-weight: 500; color: var(--text-secondary);">Completed Today</span>
-                    <span style="font-size: 1.5rem; font-weight: 600; color: var(--link-color);">${stats.completedToday}</span>
+                <div class="padded bg-grey bordered flex space-between align-center">
+                    <span class="muted">Completed Today</span>
+                    <span class="large bold text-blue">${stats.completedToday}</span>
                 </div>
-                <div style="padding: 1rem; background: var(--bg-color); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 4px; display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-weight: 500; color: var(--danger);">Total Violations</span>
-                    <span style="font-size: 1.5rem; font-weight: 600; color: var(--danger);">${stats.totalViolations}</span>
+                <div class="padded bg-grey bordered border-red flex space-between align-center">
+                    <span class="text-red">Total Violations</span>
+                    <span class="large bold text-red">${stats.totalViolations}</span>
                 </div>
             </div>
         `;

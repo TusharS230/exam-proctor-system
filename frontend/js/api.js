@@ -1,6 +1,6 @@
 class ApiClient {
-    static BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-        ? 'http://localhost:8080/api/v1' 
+    static BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:8080/api/v1'
         : 'https://exam-proctor-system.onrender.com/api/v1';
     static activeRequests = 0;
 
@@ -10,7 +10,6 @@ class ApiClient {
         if (!bar) {
             bar = document.createElement('div');
             bar.id = 'global-progress-bar';
-            bar.style.cssText = 'position:fixed; top:0; left:0; height:3px; background-color:var(--primary-color); z-index:9999; transition:width 0.2s ease, opacity 0.3s ease; width:0; opacity:1; box-shadow:0 0 10px var(--primary-color);';
             document.body.appendChild(bar);
         }
         bar.style.opacity = '1';
@@ -152,7 +151,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const isSuperAdminPage = path.includes('super-admin') || path.includes('organizations') || path.includes('onboard-tenant');
             const isSettingsPage = path.includes('settings') && !path.includes('super-admin-settings');
             const isAuthPage = path.includes('index') || path === '/' || path.endsWith('/');
-            
+
             if (!isAuthPage) {
                 if (user.role === 'STUDENT' && !isStudentPage) {
                     window.location.href = path.includes('settings') ? 'student-settings.html' : 'student-dashboard.html';
@@ -172,7 +171,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const nameEl = document.getElementById('sidebarName');
             const tenantEl = document.getElementById('sidebarTenant');
             const avatarEl = document.getElementById('sidebarAvatar');
-            
+
             const name = user.email.split('@')[0];
             const tenant = user.organization ? user.organization.tenantSlug : (user.role === 'SUPER_ADMIN' ? 'System Owner' : 'Unknown');
             const role = user.role;
@@ -182,7 +181,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (tenantEl) tenantEl.textContent = tenant;
             if (avatarEl) {
                 avatarEl.textContent = letter;
-                if (role === 'SUPER_ADMIN') avatarEl.style.background = 'var(--danger)';
             }
 
             // Create Modal
@@ -192,10 +190,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div class="profile-modal">
                         <button class="profile-modal-close" onclick="document.getElementById('profileModalOverlay').classList.remove('active')">&times;</button>
                         <div class="profile-modal-header">
-                            <div class="profile-modal-avatar" style="${role === 'SUPER_ADMIN' ? 'background: var(--danger);' : ''}">${letter}</div>
+                            <div class="profile-modal-avatar">${letter}</div>
                             <div>
-                                <h2 style="margin: 0; font-size: 1.25rem; overflow: hidden; text-overflow: ellipsis; max-width: 250px;">${user.email}</h2>
-                                <p style="margin: 0; color: var(--text-secondary); text-transform: capitalize;">${role.replace('_', ' ').toLowerCase()}</p>
+                                <h2 class="m-0 large truncate max-w-250">${user.email}</h2>
+                                <p class="m-0 muted capitalize">${role.replace('_', ' ').toLowerCase()}</p>
                             </div>
                         </div>
                         <div class="profile-detail-row">
@@ -208,7 +206,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </div>
                         <div class="profile-detail-row">
                             <span class="profile-detail-label">Account Status</span>
-                            <span class="profile-detail-value" style="color: var(--success);">Active</span>
+                            <span class="profile-detail-value text-blue">Active</span>
                         </div>
                     </div>
                 </div>
@@ -231,13 +229,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (typeof ProctorWebSocket !== 'undefined') {
                 const wsUrl = ApiClient.BASE_URL.replace('/api/v1', '') + '/ws-proctor';
                 const wsClient = new ProctorWebSocket(wsUrl);
-                
+
                 wsClient.onConnect(() => {
                     console.log("Global WebSocket connected.");
                     const orgId = user.organization ? user.organization.id : null;
                     wsClient.subscribeToMessages(user.role, user.id, orgId, (newMsg) => {
                         if (newMsg.senderId === user.id) return;
-                        
+
                         // Dispatch event so messages.js can update the thread view
                         const event = new CustomEvent('newMessageReceived', { detail: newMsg });
                         document.dispatchEvent(event);
@@ -252,7 +250,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                         if (messagesLink && !messagesLink.querySelector('.msg-dot')) {
                             const dot = document.createElement('span');
                             dot.className = 'msg-dot';
-                            dot.style.cssText = 'display:inline-block; width:8px; height:8px; background:var(--danger); border-radius:50%; margin-left:auto;';
                             messagesLink.appendChild(dot);
                         }
                     });

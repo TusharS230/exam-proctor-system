@@ -6,11 +6,12 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.List;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, UUID> {
     // Custom query method for security login lookups
     Optional<User> findByEmail(String email);
 
-    java.util.List<User> findByOrganizationIdAndRole(UUID organizationId, com.proctor.backend.model.UserRole role);
+    List<User> findByOrganizationIdAndRole(UUID organizationId, com.proctor.backend.model.UserRole role);
 }

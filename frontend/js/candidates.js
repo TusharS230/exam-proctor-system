@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', async () => {
     const tenantId = sessionStorage.getItem('tenant_id');
     const token = sessionStorage.getItem('jwt_token');
-    
+
     if(document.getElementById('sidebarTenant')) {
         document.getElementById('sidebarTenant').textContent = tenantId || 'Unknown';
     }
@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ApiClient.get('/users/students'),
                 ApiClient.get('/attempts/history')
             ]);
-                
+
             // compute stats
             const statsMap = {};
             attempts.forEach(attempt => {
@@ -37,14 +37,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             renderTable(students, statsMap);
         } catch (e) {
             console.error(e);
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:red;">Failed to load data.</td></tr>';
+            tbody.innerHTML = '<tr><td class="text-center text-red" colspan="6">Failed to load data.</td></tr>';
         }
     }
 
     function renderTable(students, statsMap) {
         tbody.innerHTML = '';
         if (students.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No students found in this organization.</td></tr>';
+            tbody.innerHTML = '<tr><td class="text-center" colspan="6">No students found in this organization.</td></tr>';
             return;
         }
 
@@ -53,26 +53,26 @@ document.addEventListener('DOMContentLoaded', async () => {
             const date = new Date(student.createdAt).toLocaleDateString();
             const statusClass = student.active ? 'status-active' : 'status-revoked';
             const statusText = student.active ? 'Active' : 'Revoked';
-            
+
             const stats = statsMap[student.id] || { count: 0, totalScore: 0 };
             const avgScore = stats.count > 0 ? Math.round(stats.totalScore / stats.count) + '%' : 'N/A';
-            
+
             let scoreClass = 'score-med';
             if (stats.count > 0 && Math.round(stats.totalScore / stats.count) >= 80) scoreClass = 'score-high';
             else if (stats.count > 0 && Math.round(stats.totalScore / stats.count) < 50) scoreClass = 'score-low';
             if (stats.count === 0) scoreClass = '';
 
             tr.innerHTML = `
-                <td style="font-weight: 500;">${student.email}</td>
-                <td style="color:var(--text-secondary);">${date}</td>
-                <td class="${statusClass}"><span style="background:var(--bg-color); padding:0.25rem 0.5rem; border-radius:4px; font-size:0.8rem; border:1px solid var(--border-color);">${statusText}</span></td>
-                <td style="font-weight: 600;">${stats.count}</td>
+                <td>${student.email}</td>
+                <td class="muted">${date}</td>
+                <td class="${statusClass}"><span class="bg-grey padded-sm small bordered">${statusText}</span></td>
+                <td class="bold">${stats.count}</td>
                 <td class="${scoreClass}">${avgScore}</td>
-                <td style="text-align: right;">
+                <td class="text-right">
                     ${student.active ? `
-                        <button class="btn-sm btn-warning reset-btn" data-id="${student.id}" style="margin-right:0.5rem; cursor:pointer;">Reset Password</button>
-                        <button class="btn-sm btn-danger revoke-btn" data-id="${student.id}" style="cursor:pointer;">Revoke Access</button>
-                    ` : `<span style="color:var(--text-secondary);font-size:0.8rem;">Access Revoked</span>`}
+                        <button class="btn-sm btn-warning reset-btn mr-1" data-id="${student.id}">Reset Password</button>
+                        <button class="btn-sm btn-danger revoke-btn" data-id="${student.id}">Revoke Access</button>
+                    ` : `<span class="muted small">Access Revoked</span>`}
                 </td>
             `;
             tbody.appendChild(tr);
@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.querySelectorAll('.revoke-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 if(!confirm("Are you sure you want to permanently revoke this student's access?")) return;
-                
+
                 const id = e.target.getAttribute('data-id');
                 e.target.disabled = true;
                 e.target.textContent = 'Revoking...';
@@ -155,7 +155,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         reader.onload = async function(event) {
             const text = event.target.result;
             const lines = text.split('\n').filter(line => line.trim().length > 0);
-            
+
             // Assuming first line is header: email,password
             // If they didn't include header, we might accidentally skip the first student.
             // Let's do a simple check.

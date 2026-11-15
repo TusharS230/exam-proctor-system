@@ -1,0 +1,364 @@
+/* =========================================================
+   components.css
+   Reusable pieces: cards, popups, notifications, lists,
+   messages and status labels.
+   ========================================================= */
+
+/* ---------- Cards and boxes ---------- */
+.card,
+.connection-panel {
+    background-color: var(--white);
+    border: 1px solid var(--grey-border);
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.stat-card {
+    background-color: var(--white);
+    border: 1px solid var(--grey-border);
+    padding: 12px;
+}
+
+.stat-value {
+    font-size: 22px;
+    font-weight: bold;
+    color: var(--blue);
+}
+
+.stat-label {
+    font-size: 13px;
+    color: var(--grey-text);
+}
+
+/* one exam in the student pages */
+.exam-card {
+    background-color: var(--white);
+    border: 1px solid var(--grey-border);
+    padding: 12px 15px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.exam-info h3 {
+    margin-bottom: 3px;
+}
+
+.exam-info p {
+    color: var(--grey-text);
+    margin: 0;
+    font-size: 13px;
+}
+
+/* one row in the dashboard lists (exams, active students) */
+.list-item {
+    border: 1px solid var(--grey-border);
+    border-left: 3px solid var(--blue);
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    background-color: var(--white);
+}
+
+.list-item.closed {
+    border-left-color: var(--red);
+}
+
+/* thin vertical line between two columns */
+.divider-v {
+    width: 1px;
+    background-color: var(--grey-border);
+}
+
+/* ---------- Popups ---------- */
+.modal,
+.overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    overflow: auto;
+}
+
+.modal-content {
+    background-color: var(--white);
+    border: 1px solid var(--grey-border);
+    padding: 20px;
+    width: 90%;
+    max-width: 500px;
+    margin: auto;
+}
+
+/* profile popup opened from the sidebar */
+.profile-modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.profile-modal-overlay.active {
+    display: flex;
+}
+
+.profile-modal {
+    position: relative;
+    background-color: var(--white);
+    border: 1px solid var(--grey-border);
+    padding: 20px;
+    width: 380px;
+    max-width: 90%;
+}
+
+.profile-modal-close {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: var(--grey-text);
+}
+
+.profile-modal-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--grey-border);
+}
+
+.profile-modal-avatar {
+    width: 45px;
+    height: 45px;
+    background-color: var(--blue);
+    color: var(--white);
+    font-size: 18px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.profile-detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.profile-detail-row:last-child {
+    border-bottom: none;
+}
+
+.profile-detail-label {
+    color: var(--grey-text);
+}
+
+.profile-detail-value {
+    font-weight: bold;
+}
+
+/* ---------- Notifications ---------- */
+.toast-container {
+    position: fixed;
+    bottom: 15px;
+    right: 15px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.toast {
+    background-color: var(--white);
+    border: 1px solid var(--blue);
+    padding: 8px 12px;
+    min-width: 220px;
+    max-width: 320px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.toast.error,
+.toast.warning {
+    border-color: var(--red);
+    color: var(--red);
+}
+
+.toast-close {
+    background: none;
+    border: none;
+    font-size: 16px;
+    color: var(--grey-text);
+    margin-left: 10px;
+}
+
+.toast.fade-out {
+    display: none;
+}
+
+/* thin loading line at the top of the page (created in api.js) */
+#global-progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    width: 0;
+    background-color: var(--blue);
+    z-index: 9999;
+}
+
+/* small red dot next to a menu item when something is new */
+.notify-dot,
+.msg-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--red);
+    margin-left: auto;
+}
+
+/* ---------- Status labels ---------- */
+.status-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: 12px;
+    font-weight: bold;
+    border: 1px solid;
+    background-color: var(--white);
+}
+
+.status-offline {
+    color: var(--red);
+}
+
+.status-active {
+    color: var(--blue);
+}
+
+.status-revoked {
+    color: var(--red);
+}
+
+/* exam scores */
+.score {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.score.good,
+.score-high {
+    color: var(--blue);
+    font-weight: bold;
+}
+
+.score.low,
+.score-med,
+.score-low {
+    color: var(--red);
+    font-weight: bold;
+}
+
+/* ---------- Live alerts and proctoring logs ---------- */
+.live-feed {
+    max-height: 500px;
+    overflow-y: auto;
+    background-color: var(--white);
+    border: 1px solid var(--grey-border);
+}
+
+.alert-item {
+    padding: 8px 10px;
+    border-bottom: 1px solid #e5e5e5;
+    border-left: 3px solid var(--red);
+    background-color: var(--white);
+}
+
+.alert-item.info {
+    border-left-color: var(--blue);
+}
+
+.alert-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 3px;
+    font-size: 13px;
+}
+
+.alert-type {
+    font-weight: bold;
+    color: var(--red);
+}
+
+.alert-item.info .alert-type {
+    color: var(--blue);
+}
+
+.alert-time {
+    color: var(--grey-text);
+}
+
+.log-item {
+    border-left: 3px solid var(--red);
+    background-color: var(--white);
+    padding: 8px 10px;
+    margin-bottom: 6px;
+}
+
+.log-item.info {
+    border-left-color: var(--blue);
+}
+
+.log-type {
+    font-weight: bold;
+    font-size: 13px;
+    color: var(--red);
+}
+
+.log-item.info .log-type {
+    color: var(--blue);
+}
+
+/* ---------- Messages ---------- */
+.msg-bubble {
+    align-self: flex-start;
+    max-width: 75%;
+    padding: 8px 12px;
+    background-color: var(--white);
+    border: 1px solid var(--grey-border);
+}
+
+.msg-bubble.mine {
+    align-self: flex-end;
+    background-color: var(--blue);
+    border-color: var(--blue);
+    color: var(--white);
+}
+
+/* inside my own (blue) message, every bit of text should be white */
+.msg-bubble.mine * {
+    color: var(--white);
+}

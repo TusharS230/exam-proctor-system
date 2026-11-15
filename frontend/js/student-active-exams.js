@@ -14,17 +14,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (exams) {
             renderExams(exams);
         } else {
-            examsList.innerHTML = `<div style="text-align:center; color: var(--danger);">Failed to load exams.</div>`;
+            examsList.innerHTML = `<div class="text-center text-red">Failed to load exams.</div>`;
         }
     } catch (e) {
         console.error(e);
-        examsList.innerHTML = `<div style="text-align:center; color: var(--danger);">Failed to load exams.</div>`;
+        examsList.innerHTML = `<div class="text-center text-red">Failed to load exams.</div>`;
     }
 
     function renderExams(exams) {
         examsList.innerHTML = '';
         if (exams.length === 0) {
-            examsList.innerHTML = `<div style="text-align:center; padding: 2rem; color: var(--text-secondary);">No exams currently assigned.</div>`;
+            examsList.innerHTML = `<div class="text-center padded muted">No exams currently assigned.</div>`;
             return;
         }
 
@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div class="exam-info">
                     <h3>${exam.title}</h3>
                     <p>${exam.description}</p>
-                    <p style="margin-top: 0.5rem; font-weight: 500;">Duration: ${exam.durationMinutes} mins | Questions: ${exam.questions ? exam.questions.length : 0}</p>
+                    <p class="mt-1">Duration: ${exam.durationMinutes} mins | Questions: ${exam.questions ? exam.questions.length : 0}</p>
                 </div>
                 <div>
                     <button class="btn-primary start-btn" data-id="${exam.id}">Start Exam</button>

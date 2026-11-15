@@ -18,16 +18,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ApiClient.get('/attempts/history'),
                 ApiClient.get('/exams/missed')
             ]);
-            
+
             historyList.innerHTML = '';
-            
+
             if ((!attempts || attempts.length === 0) && (!missedExams || missedExams.length === 0)) {
-                historyList.innerHTML = '<div style="color:var(--text-secondary); padding:1rem; text-align:center;">No past exams.</div>';
+                historyList.innerHTML = '<div class="muted padded text-center">No past exams.</div>';
                 return;
             }
-            
+
             allHistory = [];
-            
+
             (attempts || []).forEach(a => allHistory.push({
                 id: a.id,
                 isMissed: false,
@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 status: a.status,
                 totalScore: a.totalScore
             }));
-            
+
             (missedExams || []).forEach(e => allHistory.push({
                 isMissed: true,
                 examTitle: e.title || 'Unknown Exam',
@@ -46,22 +46,22 @@ document.addEventListener('DOMContentLoaded', async () => {
                 status: 'MISSED',
                 totalScore: null
             }));
-            
+
             renderHistory();
         } catch(e) {
             console.error(e);
-            historyList.innerHTML = '<div style="color:var(--danger); padding:1rem;">Failed to load history.</div>';
+            historyList.innerHTML = '<div class="text-red padded">Failed to load history.</div>';
         }
     }
-    
+
     function renderHistory() {
         const historyList = document.getElementById('historyList');
         historyList.innerHTML = '';
-        
+
         const startDateStr = document.getElementById('filterStartDate').value;
         const endDateStr = document.getElementById('filterEndDate').value;
         const sortOrder = document.getElementById('sortOrder').value;
-        
+
         let filtered = allHistory.filter(item => {
             if (startDateStr) {
                 const startObj = new Date(startDateStr);
@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             return true;
         });
-        
+
         filtered.sort((a, b) => {
             if (sortOrder === 'desc') {
                 return b.timestamp - a.timestamp;
@@ -83,39 +83,38 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return a.timestamp - b.timestamp;
             }
         });
-        
+
         if (filtered.length === 0) {
-            historyList.innerHTML = '<div style="color:var(--text-secondary); padding:1rem; text-align:center;">No matching exams found.</div>';
+            historyList.innerHTML = '<div class="muted padded text-center">No matching exams found.</div>';
             return;
         }
 
         filtered.forEach(item => {
                 let scoreHtml = '';
                 if (item.isMissed) {
-                    scoreHtml = `<div style="font-size: 1rem; font-weight: 600; color: var(--danger);">Missed / Not Taken</div>`;
+                    scoreHtml = `<div class="bold text-red">Missed / Not Taken</div>`;
                 } else if (item.status === 'SUBMITTED' && item.totalScore == null) {
-                    scoreHtml = `<div style="font-size: 1rem; font-weight: 600; color: var(--text-secondary);">Pending Evaluation</div>`;
+                    scoreHtml = `<div class="bold muted">Pending Evaluation</div>`;
                 } else {
-                    const scoreColor = item.totalScore >= 80 ? 'var(--success)' : (item.totalScore < 50 ? 'var(--danger)' : '#d97706');
-                    scoreHtml = `<div style="font-size: 1.5rem; font-weight: 700; color: ${scoreColor};">${item.totalScore != null ? item.totalScore + '%' : 'N/A'}</div>`;
+                    const scoreClass = item.totalScore >= 80 ? 'score good' : 'score low';
+                    scoreHtml = `<div class="${scoreClass}">${item.totalScore != null ? item.totalScore + '%' : 'N/A'}</div>`;
                 }
-                
+
                 const div = document.createElement('div');
                 div.className = 'exam-card';
-                div.style.background = 'var(--bg-color)';
                 div.innerHTML = `
                     <div class="exam-info">
                         <h3>${item.examTitle}</h3>
                         <p>${item.isMissed ? 'Expired on' : 'Completed on'}: ${item.dateStr}</p>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div class="flex align-center gap-2">
                         ${scoreHtml}
-                        ${!item.isMissed ? `<button class="btn-primary view-btn" data-id="${item.id}" data-status="${item.status}" style="padding: 0.4rem 0.8rem; font-size: 0.9rem;">View Answers</button>` : ''}
+                        ${!item.isMissed ? `<button class="btn-primary view-btn small" data-id="${item.id}" data-status="${item.status}">View Answers</button>` : ''}
                     </div>
                 `;
                 historyList.appendChild(div);
             });
-            
+
             // Add event listeners for view buttons
             document.querySelectorAll('.view-btn').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
@@ -125,7 +124,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
             });
     }
-    
+
     document.getElementById('filterStartDate').addEventListener('change', renderHistory);
     document.getElementById('filterEndDate').addEventListener('change', renderHistory);
     document.getElementById('sortOrder').addEventListener('change', renderHistory);
@@ -134,7 +133,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function openViewModal(attemptId, attemptStatus) {
         const container = document.getElementById('viewQuestionsContainer');
-        container.innerHTML = '<div style="text-align:center;">Loading...</div>';
+        container.innerHTML = '<div class="text-center">Loading...</div>';
         document.getElementById('viewModal').style.display = 'flex';
 
         try {
@@ -145,36 +144,36 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const q = ans.question;
                     const maxMarks = q.marks || 0;
                     const providedAns = ans.providedAnswer || 'No answer provided';
-                    
+
                     let isPending = ans.marksAwarded == null;
                     if (q.questionType === 'TEXT_RESPONSE' && attemptStatus === 'SUBMITTED') {
                         isPending = true; // for old data that saved 0
                     }
-                    
+
                     const initialMark = isPending ? 0 : ans.marksAwarded;
-                    
+
                     let isCorrectHtml = '';
                     if (!isPending) {
-                        isCorrectHtml = ans.isCorrect 
-                            ? `<span style="color: var(--success); font-weight: bold;">(Correct)</span>` 
-                            : `<span style="color: var(--danger); font-weight: bold;">(Incorrect)</span>`;
+                        isCorrectHtml = ans.isCorrect
+                            ? `<span class="text-blue bold">(Correct)</span>`
+                            : `<span class="text-red bold">(Incorrect)</span>`;
                     }
-                        
-                    const markDisplay = !isPending 
+
+                    const markDisplay = !isPending
                         ? `${initialMark} / ${maxMarks} ${isCorrectHtml}`
                         : `Pending / ${maxMarks}`;
-                    
+
                     container.innerHTML += `
-                        <div style="background: var(--bg-color); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border: 1px solid var(--border-color);">
-                            <div style="font-weight: 600; margin-bottom: 0.5rem;">Q${index + 1}: ${q.questionText}</div>
-                            <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Your Answer:</div>
-                            <div style="background: var(--surface-color); padding: 0.5rem; border-radius: 4px; margin-bottom: 1rem; border: 1px solid var(--border-color);">${providedAns}</div>
-                            
-                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <div class="bg-grey padded mb-2 bordered">
+                            <div class="bold mb-1">Q${index + 1}: ${q.questionText}</div>
+                            <div class="small muted mb-1">Your Answer:</div>
+                            <div class="padded-sm mb-2 bordered">${providedAns}</div>
+
+                            <div class="flex align-center space-between">
                                 <div>
-                                    <span style="font-size: 0.9rem; color: var(--text-secondary);">Type: ${q.questionType}</span>
+                                    <span class="small muted">Type: ${q.questionType}</span>
                                 </div>
-                                <div style="font-size: 0.9rem;">
+                                <div class="small">
                                     <strong>Marks: </strong> ${markDisplay}
                                 </div>
                             </div>
@@ -182,10 +181,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     `;
                 });
             } else {
-                container.innerHTML = '<div style="color:var(--danger);">No answers found.</div>';
+                container.innerHTML = '<div class="text-red">No answers found.</div>';
             }
         } catch (err) {
-            container.innerHTML = '<div style="color:var(--danger);">Failed to load answers.</div>';
+            container.innerHTML = '<div class="text-red">Failed to load answers.</div>';
         }
     }
 

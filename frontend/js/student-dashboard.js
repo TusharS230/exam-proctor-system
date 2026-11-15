@@ -33,17 +33,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         const completedAttempts = attempts.filter(a => a.completedAt && a.totalScore != null);
-        
+
         document.getElementById('totalExams').textContent = completedAttempts.length;
 
         if (completedAttempts.length > 0) {
             const sumScores = completedAttempts.reduce((sum, a) => sum + a.totalScore, 0);
             const avgScore = (sumScores / completedAttempts.length).toFixed(1);
             const highScore = Math.max(...completedAttempts.map(a => a.totalScore));
-            
+
             document.getElementById('avgScore').textContent = `${avgScore}%`;
             document.getElementById('highScore').textContent = `${highScore}%`;
-            
+
             // Sort chronologically for chart
             completedAttempts.sort((a, b) => new Date(a.completedAt) - new Date(b.completedAt));
             renderChart(completedAttempts);
@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function renderChart(attempts) {
         const ctx = document.getElementById('marksChart').getContext('2d');
-        
+
         const labels = attempts.map(a => {
             const date = new Date(a.completedAt);
             return `${date.getMonth()+1}/${date.getDate()} ${a.exam?.title?.substring(0, 10) || 'Exam'}`;
@@ -70,12 +70,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 datasets: [{
                     label: 'Score (%)',
                     data: data,
-                    borderColor: '#238636',
-                    backgroundColor: 'rgba(35, 134, 54, 0.2)',
+                    borderColor: 'var(--primary-color)',
+                    backgroundColor: '#e8eef5',
                     borderWidth: 2,
                     tension: 0.3,
                     fill: true,
-                    pointBackgroundColor: '#2ea043',
+                    pointBackgroundColor: 'var(--primary-hover)',
                     pointRadius: 4
                 }]
             },
@@ -87,10 +87,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                         beginAtZero: true,
                         max: 100,
                         grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
+                            color: '#eeeeee'
                         },
                         ticks: {
-                            color: '#8b949e'
+                            color: 'var(--text-secondary)'
                         }
                     },
                     x: {
@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             display: false
                         },
                         ticks: {
-                            color: '#8b949e',
+                            color: 'var(--text-secondary)',
                             maxRotation: 45,
                             minRotation: 45
                         }
@@ -109,10 +109,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                         display: false
                     },
                     tooltip: {
-                        backgroundColor: '#161b22',
-                        titleColor: '#c9d1d9',
-                        bodyColor: '#c9d1d9',
-                        borderColor: '#30363d',
+                        backgroundColor: 'var(--surface-color)',
+                        titleColor: 'var(--text-primary)',
+                        bodyColor: 'var(--text-primary)',
+                        borderColor: 'var(--border-color)',
                         borderWidth: 1
                     }
                 }

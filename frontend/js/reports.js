@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', async () => {
     const tenantId = sessionStorage.getItem('tenant_id');
     const token = sessionStorage.getItem('jwt_token');
-    
+
     if(document.getElementById('sidebarTenant')) {
         document.getElementById('sidebarTenant').textContent = tenantId || 'Unknown';
     }
@@ -28,11 +28,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             allAttempts = attempts;
             renderGroupedExams();
         } else {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:red;">Failed to load.</td></tr>';
+            tbody.innerHTML = '<tr><td class="text-center text-red" colspan="5">Failed to load.</td></tr>';
         }
     } catch (e) {
         console.error(e);
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:red;">Failed to load data.</td></tr>';
+        tbody.innerHTML = '<tr><td class="text-center text-red" colspan="5">Failed to load data.</td></tr>';
     }
 
     function getFilteredAttempts() {
@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const filtered = getFilteredAttempts();
 
         if (filtered.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No completed exams match the filters.</td></tr>';
+            tbody.innerHTML = '<tr><td class="text-center" colspan="4">No completed exams match the filters.</td></tr>';
             return;
         }
 
@@ -112,18 +112,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         Object.values(grouped).forEach(group => {
             const tr = document.createElement('tr');
             const avg = Math.round(group.totalScore / group.attempts.length);
-            
+
             let scoreClass = 'score-med';
             if (avg >= 80) scoreClass = 'score-high';
             else if (avg < 50) scoreClass = 'score-low';
 
             tr.innerHTML = `
-                <td style="font-weight: 600;">${group.title}</td>
+                <td class="bold">${group.title}</td>
                 <td>${group.attempts.length}</td>
                 <td class="${scoreClass}">${avg}%</td>
-                <td><button class="btn-primary view-btn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; cursor: pointer; border-radius: 4px; border: none; transition: all 0.2s;">View Details</button></td>
+                <td><button class="btn-primary view-btn small">View Details</button></td>
             `;
-            
+
             tr.querySelector('.view-btn').addEventListener('click', () => {
                 const freshFiltered = getFilteredAttempts().filter(a => a.exam?.id === examId);
                 renderExamDetails(group.title, freshFiltered, true);
@@ -142,7 +142,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <th>Score</th>
             <th>Status</th>
             <th>Completed At</th>
-            <th><button class="view-btn back-btn" style="background:var(--secondary-color); color:white; padding: 0.4rem 0.8rem; font-size: 0.8rem; cursor: pointer; border-radius: 4px; border: none; float: right;">&larr; Back to Exams</button></th>
+            <th><button class="view-btn back-btn bg-dark-grey text-white small no-border float-right">&larr; Back to Exams</button></th>
         `;
         tbody.innerHTML = '';
 
@@ -153,14 +153,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         if (attempts.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No attempts match the filters.</td></tr>';
+            tbody.innerHTML = '<tr><td class="text-center" colspan="5">No attempts match the filters.</td></tr>';
             return;
         }
 
         attempts.forEach(attempt => {
             const tr = document.createElement('tr');
             const date = attempt.completedAt ? new Date(attempt.completedAt).toLocaleString() : 'N/A';
-            
+
             let scoreClass = 'score-med';
             let scoreText = attempt.totalScore != null ? attempt.totalScore + '%' : 'N/A';
             if (attempt.status === 'SUBMITTED' && attempt.totalScore == null) {
@@ -173,18 +173,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             let actionBtnHtml = '';
             if (attempt.status === 'SUBMITTED' && attempt.totalScore == null) {
-                actionBtnHtml = `<button class="btn-primary grade-btn" data-id="${attempt.id}" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; cursor: pointer; border-radius: 4px; border: none; background: #d97706; color: white; margin-left: 0.5rem;">Grade Attempt</button>`;
+                actionBtnHtml = `<button class="btn-danger grade-btn small ml-1" data-id="${attempt.id}">Grade Attempt</button>`;
             } else if (attempt.status === 'GRADED' || attempt.status === 'SUBMITTED') {
-                actionBtnHtml = `<button class="btn-primary view-answers-btn" data-id="${attempt.id}" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; cursor: pointer; border-radius: 4px; border: none; background: var(--success); color: white; margin-left: 0.5rem;">View Answers</button>`;
+                actionBtnHtml = `<button class="btn-primary view-answers-btn small ml-1" data-id="${attempt.id}">View Answers</button>`;
             }
 
             tr.innerHTML = `
-                <td style="font-weight:500;">${attempt.student?.email || 'Unknown'}</td>
+                <td>${attempt.student?.email || 'Unknown'}</td>
                 <td class="${scoreClass}">${scoreText}</td>
-                <td><span style="background:var(--bg-color); padding:0.25rem 0.5rem; border-radius:4px; font-size:0.8rem; border:1px solid var(--border-color);">${attempt.status}</span></td>
-                <td style="color:var(--text-secondary);">${date}</td>
+                <td><span class="bg-grey padded-sm small bordered">${attempt.status}</span></td>
+                <td class="muted">${date}</td>
                 <td>
-                    <button class="btn-primary toggle-logs-btn" data-id="${attempt.id}" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; cursor: pointer; border-radius: 4px; border: none; background: var(--link-color); color: white;">View Logs</button>
+                    <button class="btn-primary toggle-logs-btn small" data-id="${attempt.id}">View Logs</button>
                     ${actionBtnHtml}
                 </td>
             `;
@@ -194,11 +194,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             const logRow = document.createElement('tr');
             logRow.className = 'logs-row';
             logRow.style.display = 'none';
-            logRow.style.background = 'var(--bg-color)';
             logRow.innerHTML = `
-                <td colspan="5" style="padding: 1rem;">
-                    <div class="logs-container" id="logs-${attempt.id}" style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem; background: var(--surface-color);">
-                        <div style="text-align: center; color: var(--text-secondary);">Loading logs...</div>
+                <td class="padded" colspan="5">
+                    <div class="logs-container max-h-300 scroll-y bordered padded" id="logs-${attempt.id}">
+                        <div class="text-center muted">Loading logs...</div>
                     </div>
                 </td>
             `;
@@ -215,9 +214,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const logsContainer = document.getElementById(`logs-${attempt.id}`);
                     try {
                         const logs = await ApiClient.get(`/attempts/${attempt.id}/logs`);
-                        
+
                         if (!logs || logs.length === 0) {
-                            logsContainer.innerHTML = '<div style="text-align: center; color: var(--success); font-weight: 500;">No suspicious activity detected.</div>';
+                            logsContainer.innerHTML = '<div class="text-center text-blue">No suspicious activity detected.</div>';
                             return;
                         }
 
@@ -225,31 +224,31 @@ document.addEventListener('DOMContentLoaded', async () => {
                         logsContainer.innerHTML = '';
                         logs.forEach(log => {
                             const time = new Date(log.timestamp).toLocaleTimeString();
-                            
-                            let borderClass = 'var(--danger)';
+
+                            let logClass = 'log-item';
                             if (log.eventType === 'EXAM_STARTED' || log.eventType === 'EXAM_COMPLETED' || log.eventType === 'SYSTEM') {
-                                borderClass = 'var(--link-color)';
+                                logClass = 'log-item info';
                             }
 
                             logsContainer.innerHTML += `
-                                <div style="border-left: 4px solid ${borderClass}; padding: 0.75rem; margin-bottom: 0.5rem; background: var(--bg-color); border-radius: 4px;">
-                                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
-                                        <span style="color: ${borderClass}; font-weight: 600; font-size: 0.85rem;">${log.eventType}</span>
-                                        <span style="color: var(--text-secondary); font-size: 0.8rem;">${time}</span>
+                                <div class="${logClass}">
+                                    <div class="flex space-between mb-1">
+                                        <span class="log-type">${log.eventType}</span>
+                                        <span class="muted small">${time}</span>
                                     </div>
-                                    <div style="font-size: 0.9rem; color: var(--text-primary);">
+                                    <div class="small">
                                         ${log.details}
                                     </div>
                                 </div>
                             `;
                         });
-                        
+
                     } catch(err) {
-                        logsContainer.innerHTML = '<div style="text-align: center; color: var(--danger);">Failed to load logs.</div>';
+                        logsContainer.innerHTML = '<div class="text-center text-red">Failed to load logs.</div>';
                     }
                 }
             });
-            
+
             const gradeBtn = tr.querySelector('.grade-btn');
             if (gradeBtn) {
                 gradeBtn.addEventListener('click', () => openGradingModal(attempt.id, false));
@@ -267,11 +266,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function openGradingModal(attemptId, isViewOnly = false) {
         currentGradingAttemptId = attemptId;
         const container = document.getElementById('gradingQuestionsContainer');
-        container.innerHTML = '<div style="text-align:center;">Loading...</div>';
-        
+        container.innerHTML = '<div class="text-center">Loading...</div>';
+
         const modalTitle = document.querySelector('#gradingModal h2');
         if (modalTitle) modalTitle.textContent = isViewOnly ? 'View Answers' : 'Manual Grading';
-        
+
         const submitBtn = document.getElementById('submitGradesBtn');
         if (submitBtn) submitBtn.style.display = isViewOnly ? 'none' : 'block';
 
@@ -287,31 +286,31 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const isManual = q.questionType === 'TEXT_RESPONSE';
                     const providedAns = ans.providedAnswer || 'No answer provided';
                     const initialMark = ans.marksAwarded != null ? ans.marksAwarded : 0;
-                    
+
                     container.innerHTML += `
-                        <div style="background: var(--bg-color); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border: 1px solid var(--border-color);">
-                            <div style="font-weight: 600; margin-bottom: 0.5rem;">Q${index + 1}: ${q.questionText}</div>
-                            <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Provided Answer:</div>
-                            <div style="background: var(--surface-color); padding: 0.5rem; border-radius: 4px; margin-bottom: 1rem; border: 1px solid var(--border-color);">${providedAns}</div>
-                            
-                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <div class="bg-grey padded mb-2 bordered">
+                            <div class="bold mb-1">Q${index + 1}: ${q.questionText}</div>
+                            <div class="small muted mb-1">Provided Answer:</div>
+                            <div class="padded-sm mb-2 bordered">${providedAns}</div>
+
+                            <div class="flex align-center space-between">
                                 <div>
-                                    <span style="font-size: 0.9rem; color: var(--text-secondary);">Type: ${q.questionType}</span>
+                                    <span class="small muted">Type: ${q.questionType}</span>
                                 </div>
-                                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                    <label style="font-size: 0.9rem; font-weight: 600;">Marks Awarded:</label>
-                                    <input type="number" class="grade-input" data-answer-id="${ans.id}" value="${initialMark}" min="0" max="${maxMarks}" ${(!isManual || isViewOnly) ? 'readonly' : ''} style="width: 60px; padding: 0.25rem; border: 1px solid var(--border-color); border-radius: 4px; background: ${(!isManual || isViewOnly) ? 'var(--surface-color)' : 'var(--bg-color)'}">
-                                    <span style="font-size: 0.9rem; color: var(--text-secondary);">/ ${maxMarks}</span>
+                                <div class="flex align-center gap-1">
+                                    <label class="small bold">Marks Awarded:</label>
+                                    <input type="number" class="grade-input" data-answer-id="${ans.id}" value="${initialMark}" min="0" max="${maxMarks}" ${(!isManual || isViewOnly) ? 'readonly' : ''}>
+                                    <span class="small muted">/ ${maxMarks}</span>
                                 </div>
                             </div>
                         </div>
                     `;
                 });
             } else {
-                container.innerHTML = '<div style="color:var(--danger);">No answers found.</div>';
+                container.innerHTML = '<div class="text-red">No answers found.</div>';
             }
         } catch (err) {
-            container.innerHTML = '<div style="color:var(--danger);">Failed to load answers.</div>';
+            container.innerHTML = '<div class="text-red">Failed to load answers.</div>';
         }
     }
 
