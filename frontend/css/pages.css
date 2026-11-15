@@ -18,7 +18,8 @@ body.auth-mode {
 }
 
 .auth-logo {
-    font-family: Georgia, "Times New Roman", serif;
+    font-family: var(--font-heading);
+    font-weight: 700;
     font-size: 30px;
     padding-bottom: 6px;
     margin-bottom: 20px;
@@ -101,12 +102,13 @@ body.auth-mode {
 }
 
 .exam-title {
-    font-family: Georgia, "Times New Roman", serif;
+    font-family: var(--font-heading);
+    font-weight: 700;
     font-size: 19px;
 }
 
 .timer {
-    font-family: "Courier New", monospace;
+    font-family: var(--font-heading);
     font-size: 18px;
     font-weight: bold;
 }
@@ -129,7 +131,8 @@ body.auth-mode {
 
 .question-number {
     display: block;
-    font-family: Georgia, "Times New Roman", serif;
+    font-family: var(--font-heading);
+    font-weight: 700;
     font-size: 15px;
     color: var(--blue);
     margin-bottom: 4px;

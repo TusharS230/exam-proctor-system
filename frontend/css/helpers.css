@@ -21,7 +21,7 @@
 .text-red   { color: var(--red); }
 .text-white { color: var(--white); }
 
-.mono       { font-family: "Courier New", monospace; }
+.mono       { font-family: var(--font-heading); }
 .pre-wrap   { white-space: pre-wrap; }
 .capitalize { text-transform: capitalize; }
 

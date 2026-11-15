@@ -23,7 +23,8 @@
 }
 
 .stat-value {
-    font-family: Georgia, "Times New Roman", serif;
+    font-family: var(--font-heading);
+    font-weight: 700;
     font-size: 30px;
     color: var(--blue);
 }
@@ -42,7 +43,8 @@
 }
 
 .stat-number {
-    font-family: Georgia, "Times New Roman", serif;
+    font-family: var(--font-heading);
+    font-weight: 700;
     font-size: 22px;
 }
 
@@ -182,7 +184,8 @@
 
 /* exam scores */
 .score {
-    font-family: Georgia, "Times New Roman", serif;
+    font-family: var(--font-heading);
+    font-weight: 700;
     font-size: 22px;
 }
 

@@ -27,8 +27,9 @@
 }
 
 .sidebar-logo {
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 22px;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 18px; /* typewriter letters are wide, so a bit smaller than other headings */
     color: var(--blue);
 }
 
@@ -102,9 +103,9 @@
 
 /* section heading with a dashed line under it */
 .section-title {
-    font-family: Georgia, "Times New Roman", serif;
+    font-family: var(--font-heading);
     font-size: 19px;
-    font-weight: normal;
+    font-weight: 700;
     padding-bottom: 3px;
     margin-bottom: 10px;
     border-bottom: 1px dashed var(--line-dashed);
