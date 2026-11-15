@@ -99,13 +99,40 @@ class ExamServiceTest {
                 .hasMessageContaining("end time");
     }
 
+    @Test
+    void examWithoutSchedule_isRejected() {
+        CreateExamRequest request = request(mcq("Network", "Data Link", "Network"));
+        request.setScheduledStartTime(null);
+        request.setScheduledEndTime(null);
+
+        assertThatThrownBy(() -> examService.createExam(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("required");
+    }
+
+    @Test
+    void windowShorterThanDuration_isRejected() {
+        java.time.OffsetDateTime opens = java.time.OffsetDateTime.now().plusHours(1);
+        CreateExamRequest request = request(mcq("Network", "Data Link", "Network"));
+        request.setScheduledStartTime(opens.toString());
+        request.setScheduledEndTime(opens.plusMinutes(30).toString()); // exam is 60 minutes long
+
+        assertThatThrownBy(() -> examService.createExam(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("at least its duration");
+    }
+
     // ---------- helpers ----------
 
+    // a valid request: opens in one hour, closes two hours after that
     private CreateExamRequest request(QuestionDto... questions) {
+        java.time.OffsetDateTime opens = java.time.OffsetDateTime.now().plusHours(1);
         return CreateExamRequest.builder()
                 .title("Midterm")
                 .description("Unit 1 to 3")
                 .durationMinutes(60)
+                .scheduledStartTime(opens.toString())
+                .scheduledEndTime(opens.plusHours(2).toString())
                 .questions(List.of(questions))
                 .build();
     }

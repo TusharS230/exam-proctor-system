@@ -166,6 +166,41 @@ class ExamAttemptServiceTest {
         assertThat(service.isLate(attempt, start.plusMinutes(63))).isTrue();
     }
 
+    @Test
+    void deadline_isTheExamClosingTime_whenThatComesFirst() {
+        OffsetDateTime start = OffsetDateTime.now();
+        Exam exam = examWith(mcq("A", 1));
+        exam.setScheduledEndTime(start.plusMinutes(20)); // closes before the 60 minute limit
+        ExamAttempt attempt = attemptFor(exam, start);
+
+        assertThat(service.deadlineFor(attempt)).isEqualTo(start.plusMinutes(20));
+        assertThat(service.isLate(attempt, start.plusMinutes(25))).isTrue();
+    }
+
+    @Test
+    void abandonedAttempt_isClosedAutomatically() {
+        // started 2 hours ago, the exam is only 60 minutes long
+        ExamAttempt attempt = attemptFor(examWith(mcq("A", 1)), OffsetDateTime.now().minusHours(2));
+        when(attemptRepository.findByStatus(AttemptStatus.IN_PROGRESS)).thenReturn(List.of(attempt));
+        when(attemptRepository.save(any(ExamAttempt.class))).thenAnswer(call -> call.getArgument(0));
+
+        int closed = service.closeExpiredAttempts(OffsetDateTime.now());
+
+        assertThat(closed).isEqualTo(1);
+        assertThat(attempt.getStatus()).isEqualTo(AttemptStatus.GRADED);
+        assertThat(attempt.getTotalScore()).isZero();
+        verify(proctorLogRepository).save(any(ProctorLog.class));
+    }
+
+    @Test
+    void runningAttempt_isLeftAlone() {
+        ExamAttempt attempt = attemptFor(examWith(mcq("A", 1)), OffsetDateTime.now().minusMinutes(10));
+        when(attemptRepository.findByStatus(AttemptStatus.IN_PROGRESS)).thenReturn(List.of(attempt));
+
+        assertThat(service.closeExpiredAttempts(OffsetDateTime.now())).isZero();
+        assertThat(attempt.getStatus()).isEqualTo(AttemptStatus.IN_PROGRESS);
+    }
+
     // ---------- helpers ----------
 
     private void loginAs(String email) {

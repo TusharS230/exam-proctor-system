@@ -196,12 +196,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 actionBtn = `<button class="btn-danger toggle-status-btn small" data-id="${exam.id}" data-action="PAST">Close Exam</button>`;
             }
 
+            // when it opens/closes, in words that are quick to read
             let timeInfo = `<div class="small muted">Duration: ${exam.durationMinutes} mins</div>`;
-            if (exam.scheduledStartTime) {
-                timeInfo += `<div class="small muted mt-1">Start: ${new Date(exam.scheduledStartTime).toLocaleString()}</div>`;
+            if (state === 'SCHEDULED' && exam.scheduledStartTime) {
+                timeInfo += `<div class="small">Opens ${timeFromNow(exam.scheduledStartTime)} <span class="muted">(${new Date(exam.scheduledStartTime).toLocaleString()})</span></div>`;
             }
-            if (exam.scheduledEndTime) {
-                timeInfo += `<div class="small muted">End: ${new Date(exam.scheduledEndTime).toLocaleString()}</div>`;
+            if (state === 'ACTIVE' && exam.scheduledEndTime) {
+                timeInfo += `<div class="small text-blue">Closes ${timeFromNow(exam.scheduledEndTime)} <span class="muted">(${new Date(exam.scheduledEndTime).toLocaleString()})</span></div>`;
+            }
+            if (state === 'PAST' && exam.scheduledEndTime) {
+                timeInfo += `<div class="small muted">Closed ${new Date(exam.scheduledEndTime).toLocaleString()}</div>`;
             }
 
             div.innerHTML = `
@@ -285,4 +289,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadActiveCandidates();
     loadExams();
     loadQuickAnalytics();
+
+    // refresh the exam list every minute, so exams move to "Past" on their own when they close
+    setInterval(loadExams, 60000);
 });

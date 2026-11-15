@@ -16,13 +16,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // 2. Load the exams this student can take
-    try {
-        const exams = await ApiClient.get('/exams');
-        renderExams(exams || []);
-    } catch (e) {
-        console.error(e);
-        examsList.innerHTML = `<p class="text-center text-red">Failed to load exams.</p>`;
+    let examsById = {};
+    async function loadExams() {
+        try {
+            const exams = await ApiClient.get('/exams');
+            examsById = {};
+            (exams || []).forEach(exam => { examsById[exam.id] = exam; });
+            renderExams(exams || []);
+        } catch (e) {
+            console.error(e);
+            examsList.innerHTML = `<p class="text-center text-red">Failed to load exams.</p>`;
+        }
     }
+    await loadExams();
+
+    // refresh every minute: an exam that was "opening later" gets its Start button on time
+    setInterval(loadExams, 60000);
 
     function renderExams(exams) {
         examsList.innerHTML = '';
@@ -38,11 +47,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // exams that have not opened yet show when they open, instead of a Start button
             const action = opensLater
-                ? `<span class="small muted">Opens ${new Date(exam.scheduledStartTime).toLocaleString()}</span>`
+                ? `<span class="small muted">Opens ${timeFromNow(exam.scheduledStartTime)}<br>${new Date(exam.scheduledStartTime).toLocaleString()}</span>`
                 : `<button class="btn-primary start-btn" data-id="${exam.id}">Start Exam</button>`;
 
             const closesInfo = exam.scheduledEndTime
-                ? ` | Closes: ${new Date(exam.scheduledEndTime).toLocaleString()}`
+                ? ` | Closes ${timeFromNow(exam.scheduledEndTime)} (${new Date(exam.scheduledEndTime).toLocaleString()})`
                 : '';
 
             const div = document.createElement('div');
@@ -61,7 +70,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.querySelectorAll('.start-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const examId = e.target.getAttribute('data-id');
-                if (!confirm('Start this exam now? The timer starts as soon as you begin.')) return;
+                const exam = examsById[examId];
+
+                // tell the student if the exam closes before their full time would end
+                let question = `Start "${exam.title}" now? You will have ${exam.durationMinutes} minutes and the timer starts immediately.`;
+                if (exam.scheduledEndTime) {
+                    const minutesLeft = Math.floor((new Date(exam.scheduledEndTime) - Date.now()) / 60000);
+                    if (minutesLeft < exam.durationMinutes) {
+                        question = `This exam closes in ${minutesLeft} minutes, so you will only have ${minutesLeft} of the ${exam.durationMinutes} minutes. Start now?`;
+                    }
+                }
+                if (!confirm(question)) return;
 
                 e.target.disabled = true;
                 e.target.textContent = 'Starting...';

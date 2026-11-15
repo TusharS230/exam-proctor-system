@@ -158,7 +158,7 @@ public class ExamAttemptService {
             ProctorLog lateLog = new ProctorLog();
             lateLog.setExamAttemptId(attempt.getId().toString());
             lateLog.setEventType("LATE_SUBMISSION");
-            lateLog.setDetails("Submitted after the " + attempt.getExam().getDurationMinutes() + " minute time limit.");
+            lateLog.setDetails("Submitted after the time limit or after the exam closed.");
             proctorLogRepository.save(lateLog);
             log.warn("Late submission for attempt {}", attemptId);
         }
@@ -166,12 +166,18 @@ public class ExamAttemptService {
         // map, evaluate, and score the student's answers in memory
         List<Answer> answersToSave = mapStudentAnswersToQuestions(request, attempt);
 
+        return finishAttempt(attempt, answersToSave, tenantSlug, "Student has completed and submitted the exam.");
+    }
+
+    // Saves the answers, works out the score and closes the attempt.
+    // Used both when a student submits and when an attempt is closed automatically.
+    private ExamAttempt finishAttempt(ExamAttempt attempt, List<Answer> answersToSave, String tenantSlug, String details) {
         // batch save all answers to postgresql
         answerRepository.saveAll(answersToSave);
 
         // count auto-graded marks from our processed list
         int totalPossibleMarks = attempt.getExam().getQuestions().stream().mapToInt(com.proctor.backend.model.Question::getMarks).sum();
-        
+
         int autoScoredMarks = answersToSave.stream()
                 .filter(a -> Boolean.TRUE.equals(a.getIsCorrect()))
                 .mapToInt(a -> a.getQuestion().getMarks())
@@ -193,7 +199,7 @@ public class ExamAttemptService {
 
         attempt.setCompletedAt(OffsetDateTime.now());
 
-        log.info("exam submission complete for attempt {}. status: {}", attemptId, attempt.getStatus());
+        log.info("exam attempt {} finished. status: {}", attempt.getId(), attempt.getStatus());
 
         ExamAttempt savedAttempt = attemptRepository.save(attempt);
 
@@ -203,23 +209,60 @@ public class ExamAttemptService {
         eventDto.setStudentEmail(savedAttempt.getStudent().getEmail());
         eventDto.setExamTitle(savedAttempt.getExam().getTitle());
         eventDto.setEventType("EXAM_COMPLETED");
-        eventDto.setDetails("Student has completed and submitted the exam.");
+        eventDto.setDetails(details);
         eventDto.setTimestamp(OffsetDateTime.now().toString());
         messagingTemplate.convertAndSend("/topic/proctor/tenant/" + tenantSlug, eventDto);
 
         return savedAttempt;
     }
 
+    /**
+     * Closes attempts whose time is over (the student closed the tab, lost internet, ...).
+     * Called every minute by ExamClosingJob. Answers are only sent on submit,
+     * so an abandoned attempt is closed with the answers it has (usually none).
+     */
+    @Transactional
+    public int closeExpiredAttempts(OffsetDateTime now) {
+        int closed = 0;
+        for (ExamAttempt attempt : attemptRepository.findByStatus(AttemptStatus.IN_PROGRESS)) {
+            OffsetDateTime deadline = deadlineFor(attempt);
+            if (deadline == null || !now.isAfter(deadline.plusMinutes(SUBMIT_GRACE_MINUTES))) {
+                continue;
+            }
+
+            ProctorLog autoLog = new ProctorLog();
+            autoLog.setExamAttemptId(attempt.getId().toString());
+            autoLog.setEventType("AUTO_SUBMITTED");
+            autoLog.setDetails("Time ran out before the student submitted. The exam was closed automatically.");
+            proctorLogRepository.save(autoLog);
+
+            String tenantSlug = attempt.getExam().getOrganization().getTenantSlug();
+            finishAttempt(attempt, List.of(), tenantSlug, "Time ran out. The exam was submitted automatically.");
+            closed++;
+        }
+        return closed;
+    }
+
     // Private helper methods
 
-    // true when the attempt is submitted after its duration plus the grace period
-    boolean isLate(ExamAttempt attempt, OffsetDateTime submittedAt) {
+    // The moment an attempt must end: the student's own time limit,
+    // or the exam's closing time if that comes first. Null if there is no limit.
+    OffsetDateTime deadlineFor(ExamAttempt attempt) {
         Integer duration = attempt.getExam().getDurationMinutes();
-        if (duration == null || attempt.getStartedAt() == null) {
-            return false;
-        }
-        OffsetDateTime deadline = attempt.getStartedAt().plusMinutes(duration + SUBMIT_GRACE_MINUTES);
-        return submittedAt.isAfter(deadline);
+        OffsetDateTime closesAt = attempt.getExam().getScheduledEndTime();
+        OffsetDateTime timeLimit = (duration != null && attempt.getStartedAt() != null)
+                ? attempt.getStartedAt().plusMinutes(duration)
+                : null;
+
+        if (timeLimit == null) return closesAt;
+        if (closesAt == null) return timeLimit;
+        return timeLimit.isBefore(closesAt) ? timeLimit : closesAt;
+    }
+
+    // true when the attempt is submitted after its deadline plus the grace period
+    boolean isLate(ExamAttempt attempt, OffsetDateTime submittedAt) {
+        OffsetDateTime deadline = deadlineFor(attempt);
+        return deadline != null && submittedAt.isAfter(deadline.plusMinutes(SUBMIT_GRACE_MINUTES));
     }
 
     private List<Answer> mapStudentAnswersToQuestions(SubmitExamRequest request, ExamAttempt attempt) {

@@ -148,13 +148,88 @@ document.addEventListener('DOMContentLoaded', () => {
         updateTotalMarks();
     }
 
+    // ---------- Exam window (opens at / closes at) ----------
+    const durationInput = document.getElementById('examDuration');
+    const startInput = document.getElementById('examStartTime');
+    const endInput = document.getElementById('examEndTime');
+    const scheduleHint = document.getElementById('scheduleHint');
+    let endEditedByHand = false;
+
+    // a Date as the "YYYY-MM-DDTHH:MM" text a datetime-local box expects (local time)
+    function toInputValue(date) {
+        const pad = n => String(n).padStart(2, '0');
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    }
+
+    // until the admin picks a closing time, keep it at "opens at + duration"
+    function suggestEndTime() {
+        if (endEditedByHand || !startInput.value) return;
+        const minutes = parseInt(durationInput.value) || 0;
+        const end = new Date(new Date(startInput.value).getTime() + minutes * 60000);
+        endInput.value = toInputValue(end);
+    }
+
+    // a sentence under the two boxes explaining what students will get
+    function updateScheduleHint() {
+        if (!startInput.value || !endInput.value) {
+            scheduleHint.textContent = '';
+            return;
+        }
+        const start = new Date(startInput.value);
+        const end = new Date(endInput.value);
+        const windowMinutes = Math.round((end - start) / 60000);
+        const duration = parseInt(durationInput.value) || 0;
+
+        if (windowMinutes <= 0) {
+            scheduleHint.textContent = 'The closing time must be after the opening time.';
+            scheduleHint.className = 'small text-red mb-3';
+        } else if (windowMinutes < duration) {
+            scheduleHint.textContent = `The exam is open for only ${windowMinutes} minutes. It must stay open for at least its ${duration} minute duration.`;
+            scheduleHint.className = 'small text-red mb-3';
+        } else {
+            scheduleHint.textContent = `Students can start any time between ${start.toLocaleString()} and ${end.toLocaleString()}. ` +
+                `Each student gets ${duration} minutes, and everything is submitted automatically at the closing time.`;
+            scheduleHint.className = 'small muted mb-3';
+        }
+    }
+
+    // default: opens at the next round 5 minutes, closes after one duration
+    const firstSlot = new Date(Math.ceil((Date.now() + 60000) / 300000) * 300000);
+    startInput.value = toInputValue(firstSlot);
+    startInput.min = toInputValue(new Date());
+    suggestEndTime();
+    updateScheduleHint();
+
+    startInput.addEventListener('change', () => { suggestEndTime(); updateScheduleHint(); });
+    durationInput.addEventListener('input', () => { suggestEndTime(); updateScheduleHint(); });
+    endInput.addEventListener('change', () => { endEditedByHand = true; updateScheduleHint(); });
+
+    // ---------- Select all / none students ----------
+    document.getElementById('selectAllStudents').addEventListener('click', (e) => {
+        e.preventDefault();
+        document.querySelectorAll('.student-checkbox').forEach(cb => { cb.checked = true; });
+    });
+    document.getElementById('selectNoStudents').addEventListener('click', (e) => {
+        e.preventDefault();
+        document.querySelectorAll('.student-checkbox').forEach(cb => { cb.checked = false; });
+    });
+
     // returns a message describing the first mistake in the form, or null if it is fine
     function findProblem(questions, start, end, duration) {
         if (!duration || duration < 1) {
             return 'Duration must be at least 1 minute.';
         }
-        if (start && end && new Date(end) <= new Date(start)) {
-            return 'The end time must be after the start time.';
+        if (!start || !end) {
+            return 'Please set when the exam opens and closes.';
+        }
+        if (new Date(end) <= new Date(start)) {
+            return 'The closing time must be after the opening time.';
+        }
+        if (new Date(end) <= new Date()) {
+            return 'The closing time is already in the past.';
+        }
+        if ((new Date(end) - new Date(start)) / 60000 < duration) {
+            return `The exam must stay open for at least its duration (${duration} minutes).`;
         }
         if (questions.length === 0) {
             return 'Add at least one question.';

@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
             examIsActive = true;
 
             // 5. Start the timer
-            startTimer(attempt.startedAt, examData.durationMinutes);
+            startTimer(attempt.startedAt, examData.durationMinutes, examData.scheduledEndTime);
 
         } catch (e) {
             console.error(e);
@@ -49,10 +49,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let timerInterval;
 
-    function startTimer(startedAtIso, durationMinutes) {
+    function startTimer(startedAtIso, durationMinutes, closesAtIso) {
         const startTime = new Date(startedAtIso).getTime();
         const durationMs = durationMinutes * 60 * 1000;
-        const endTime = startTime + durationMs;
+        // the exam ends at the student's time limit, or when the exam closes if that is sooner
+        let endTime = startTime + durationMs;
+        if (closesAtIso) {
+            endTime = Math.min(endTime, new Date(closesAtIso).getTime());
+        }
+        let warnedFive = false;
+        let warnedOne = false;
 
         const timerDisplay = document.getElementById('examTimer');
 
@@ -77,6 +83,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (totalSeconds < 300) { // last 5 minutes
                 timerDisplay.classList.add('timer-low');
+            }
+            // one-time reminders so the student is not surprised by the auto submit
+            if (totalSeconds <= 300 && totalSeconds > 60 && !warnedFive) {
+                warnedFive = true;
+                Toast.warning('5 minutes left. Your answers will be submitted automatically when time runs out.', 6000);
+            }
+            if (totalSeconds <= 60 && !warnedOne) {
+                warnedOne = true;
+                Toast.warning('1 minute left!', 6000);
             }
         }
 

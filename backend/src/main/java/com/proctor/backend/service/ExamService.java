@@ -52,12 +52,24 @@ public class ExamService {
                 .organization(organization)
                 .build();
 
-        exam.setScheduledStartTime(parseTime(request.getScheduledStartTime(), "start time"));
-        exam.setScheduledEndTime(parseTime(request.getScheduledEndTime(), "end time"));
-        if (exam.getScheduledStartTime() != null && exam.getScheduledEndTime() != null
-                && !exam.getScheduledEndTime().isAfter(exam.getScheduledStartTime())) {
+        // every exam has an opening and a closing time
+        java.time.OffsetDateTime opensAt = parseTime(request.getScheduledStartTime(), "start time");
+        java.time.OffsetDateTime closesAt = parseTime(request.getScheduledEndTime(), "end time");
+        if (opensAt == null || closesAt == null) {
+            throw new IllegalArgumentException("Start time and end time are required");
+        }
+        if (!closesAt.isAfter(opensAt)) {
             throw new IllegalArgumentException("The end time must be after the start time");
         }
+        if (!closesAt.isAfter(java.time.OffsetDateTime.now())) {
+            throw new IllegalArgumentException("The end time is already in the past");
+        }
+        if (java.time.Duration.between(opensAt, closesAt).toMinutes() < request.getDurationMinutes()) {
+            throw new IllegalArgumentException("The exam must stay open for at least its duration ("
+                    + request.getDurationMinutes() + " minutes)");
+        }
+        exam.setScheduledStartTime(opensAt);
+        exam.setScheduledEndTime(closesAt);
 
         // process the nested question safely
         List<Question> mappedQuestions = new ArrayList<>();
@@ -224,5 +236,21 @@ public class ExamService {
         } catch (java.time.format.DateTimeParseException e) {
             throw new IllegalArgumentException("Invalid " + fieldName + ": " + value);
         }
+    }
+
+    /**
+     * Marks exams as PAST once their closing time has gone by,
+     * so the dashboard and the students see them as finished.
+     * Called every minute by ExamClosingJob.
+     */
+    @Transactional
+    public int closeEndedExams(java.time.OffsetDateTime now) {
+        List<Exam> ended = examRepository.findByStatusAndScheduledEndTimeBefore("ACTIVE", now);
+        for (Exam exam : ended) {
+            exam.setStatus("PAST");
+            log.info("Exam '{}' reached its closing time and was closed", exam.getTitle());
+        }
+        examRepository.saveAll(ended);
+        return ended.size();
     }
 }

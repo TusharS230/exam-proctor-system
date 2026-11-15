@@ -144,6 +144,23 @@ window.escapeHtml = function(value) {
         .replace(/'/g, '&#39;');
 };
 
+// How far away a date is, in words: "in 25 min", "in 2 h 5 min", "in 3 days", or "5 min ago"
+window.timeFromNow = function(date) {
+    const diffMs = new Date(date).getTime() - Date.now();
+    const minutes = Math.round(Math.abs(diffMs) / 60000);
+    let text;
+    if (minutes < 1) text = 'less than a minute';
+    else if (minutes < 60) text = `${minutes} min`;
+    else if (minutes < 60 * 24) {
+        const h = Math.floor(minutes / 60), m = minutes % 60;
+        text = m ? `${h} h ${m} min` : `${h} h`;
+    } else {
+        const days = Math.round(minutes / (60 * 24));
+        text = `${days} day${days > 1 ? 's' : ''}`;
+    }
+    return diffMs >= 0 ? `in ${text}` : `${text} ago`;
+};
+
 // Every page except the login page needs a logged-in user
 (function requireLogin() {
     const page = window.location.pathname.split('/').pop();
