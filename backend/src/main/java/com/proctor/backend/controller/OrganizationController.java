@@ -1,48 +1,58 @@
 package com.proctor.backend.controller;
 
 import com.proctor.backend.dto.CreateOrganizationRequest;
+import com.proctor.backend.dto.CreateUserRequest;
 import com.proctor.backend.model.Organization;
+import com.proctor.backend.model.User;
 import com.proctor.backend.repository.OrganizationRepository;
+import com.proctor.backend.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.beans.Transient;
 import java.util.List;
+import java.util.UUID;
 
+// only the SUPER_ADMIN can reach these endpoints (see SecurityConfig)
 @RestController
 @RequestMapping("/api/v1/organizations")
 @RequiredArgsConstructor
 public class OrganizationController {
 
     private final OrganizationRepository organizationRepository;
+    private final UserService userService;
 
-    // POST endpoint: create a fresh organization tenant record
+    // create a new organization (tenant)
     @PostMapping
-    public ResponseEntity<Organization> createOrganization(@RequestBody CreateOrganizationRequest request){
-        // construct our entity object using the clean builder pattern
+    public ResponseEntity<Organization> createOrganization(@RequestBody CreateOrganizationRequest request) {
+        if (request.getName() == null || request.getName().isBlank()
+                || request.getTenantSlug() == null || request.getTenantSlug().isBlank()) {
+            throw new IllegalArgumentException("Organization name and tenant slug are required");
+        }
+
+        String slug = request.getTenantSlug().trim().toLowerCase();
+        if (organizationRepository.findByTenantSlug(slug).isPresent()) {
+            throw new IllegalStateException("Tenant slug '" + slug + "' is already taken");
+        }
+
         Organization organization = Organization.builder()
-                .name(request.getName())
-                .tenantSlug((request.getTenantSlug()))
+                .name(request.getName().trim())
+                .tenantSlug(slug)
                 .build();
-        Organization savedOrganization = organizationRepository.save(organization);
-        return new ResponseEntity<>(savedOrganization, HttpStatus.CREATED);
+        return new ResponseEntity<>(organizationRepository.save(organization), HttpStatus.CREATED);
     }
-    // GET endpoint: retrieve all organizations registered in the cluster
-    @Transient
+
+    // list every organization on the platform
     @GetMapping
     public ResponseEntity<List<Organization>> getAllOrganizations() {
-        List<Organization> organizations = organizationRepository.findAll();
-        return ResponseEntity.ok(organizations);
+        return ResponseEntity.ok(organizationRepository.findAll());
     }
 
+    // create the first admin account for an organization
     @PostMapping("/{id}/admin")
-    public ResponseEntity<com.proctor.backend.model.User> createOrgAdmin(
-            @PathVariable java.util.UUID id,
-            @RequestBody com.proctor.backend.dto.CreateUserRequest request,
-            @org.springframework.beans.factory.annotation.Autowired com.proctor.backend.service.UserService userService) {
-        com.proctor.backend.model.User admin = userService.createOrgAdminForTenant(id, request);
+    public ResponseEntity<User> createOrgAdmin(@PathVariable UUID id, @RequestBody CreateUserRequest request) {
+        User admin = userService.createOrgAdminForTenant(id, request);
         return new ResponseEntity<>(admin, HttpStatus.CREATED);
     }
 }

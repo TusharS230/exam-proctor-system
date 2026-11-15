@@ -1,111 +1,169 @@
-# 🎓 Multi-Tenant SaaS Exam Proctor Platform
+# Exam Proctor
 
-![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
-![Java](https://img.shields.io/badge/Java-21-orange)
-![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.2-brightgreen)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
+A multi-tenant online examination platform. Several colleges (tenants) share one deployment, and each college only sees its own exams, students and results. Admins create exams, students take them in the browser, and suspicious activity during an exam (switching tabs, copy/paste, right-click) is sent to the admin's dashboard in real time.
 
-A professional, multi-tenant Software-as-a-Service (SaaS) platform designed for educational institutions to conduct, manage, and proctor online examinations securely. Built with a robust **Java Spring Boot** backend, **PostgreSQL** database, and a highly responsive, modern frontend.
+**Live demo:** https://exxamproctor.netlify.app
 
----
+## Features
 
-## ✨ Key Features
+- **Multi-tenant:** every organization has a unique tenant slug (for example `kletech`). The tenant is stored inside the signed JWT, and every request is checked against it.
+- **Three roles**, enforced on the backend with Spring Security:
+  - `SUPER_ADMIN` onboards organizations and creates their first admin.
+  - `ORG_ADMIN` adds students, creates and assigns exams, watches live exams, and grades written answers.
+  - `STUDENT` takes assigned exams and sees past results.
+- **Exams:** multiple-choice questions are graded automatically when the student submits. Text answers wait for manual grading by the admin.
+- **Live proctoring:** the exam page reports tab switches, window blur, copy/cut/paste and right-clicks over WebSockets (STOMP). The admin dashboard receives them instantly.
+- **Server-side checks:** a student can only start exams assigned to them, only once, and only while the exam is open. Late submissions are saved but flagged.
+- **Messaging** between students, their organization's admin, and the super admin.
 
-- **🏢 Multi-Tenant Architecture:** Supports multiple organizations (tenants) under a single deployment. Data is strictly isolated by `tenant_slug`.
-- **🔐 Role-Based Access Control (RBAC):**
-  - `SUPER_ADMIN`: Manages platform-wide settings and onboards new organizations.
-  - `ORG_ADMIN`: Manages exams, students, and proctoring for their specific institution.
-  - `STUDENT`: Takes exams, views past results, and receives live notifications.
-- **📝 Comprehensive Exam Management:** Create Multiple-Choice Questions (MCQs) with support for decimal-based positive and negative marking.
-- **⚡ Real-Time WebSockets:** Live messaging and system notifications between admins and students during active exams.
-- **🎨 Modern UI/UX:** A sleek, accessible, and responsive vanilla HTML/CSS/JS frontend without the bloat of heavy frontend frameworks.
-- **☁️ Cloud-Native Deployment:** Containerized with Docker and optimized for deployment on Render and Netlify.
+## Tech stack
 
----
+| Part | Technology |
+| --- | --- |
+| Backend | Java 21, Spring Boot 3.3, Spring Web, Spring Data JPA (Hibernate), Spring Security, JWT (jjwt), Spring WebSocket (STOMP + SockJS), Lombok |
+| Database | PostgreSQL (hosted on Neon) |
+| Frontend | HTML, CSS and vanilla JavaScript (no framework) |
+| Testing | JUnit 5, Mockito, H2 in-memory database |
+| Deployment | Docker (backend on Render), Netlify (frontend) |
 
-## 🏗️ System Architecture
+## Architecture
 
 ```mermaid
-graph TD
-    Client[Web Browser Frontend]
-    Netlify[Netlify Static Hosting]
-    Render[Render Cloud Container]
-    Spring[Spring Boot Backend App]
-    DB[(Neon Serverless PostgreSQL)]
-    WS[WebSocket Server]
+graph LR
+    Browser[Browser - HTML/CSS/JS on Netlify]
+    API[Spring Boot API on Render]
+    WS[WebSocket broker /ws-proctor]
+    DB[(PostgreSQL on Neon)]
 
-    Client -->|Loads HTML/CSS/JS| Netlify
-    Client -->|REST API Calls| Render
-    Client <-->|ws:// Live Proctoring| WS
-    
-    Render --> Spring
-    Spring --> WS
-    Spring <-->|JDBC / Hibernate ORM| DB
+    Browser -->|REST + JWT| API
+    Browser <-->|STOMP over WebSocket| WS
+    API --> WS
+    API -->|JPA / Hibernate| DB
 ```
 
----
+Every REST request goes through two filters before reaching a controller:
 
-## 🛠️ Technology Stack
+1. `JwtAuthenticationFilter` checks the `Authorization: Bearer <token>` header and logs the user in for that request.
+2. `TenantFilter` checks that the `X-Tenant-ID` header matches the tenant inside the token, then stores it in a `ThreadLocal` (`TenantContext`) for the services to use.
 
-**Backend:**
-- Java 21
-- Spring Boot 3.2
-- Spring Data JPA (Hibernate ORM)
-- Spring Security (JWT Authentication)
-- Spring WebSockets
+## Project structure
 
-**Frontend:**
-- HTML5, CSS3, Vanilla JavaScript
-- Fetch API for RESTful integration
+```
+exam-proctor-system/
+├── backend/                     Spring Boot application
+│   ├── src/main/java/com/proctor/backend/
+│   │   ├── config/              security, JWT, WebSocket and seed data
+│   │   ├── controller/          REST and WebSocket endpoints
+│   │   ├── service/             business logic
+│   │   ├── repository/          Spring Data JPA repositories
+│   │   ├── model/               JPA entities and enums
+│   │   ├── dto/                 request / response objects
+│   │   ├── filter/              JWT and tenant filters
+│   │   ├── context/             per-request tenant holder
+│   │   └── exception/           global error handling
+│   ├── src/test/                unit tests (run with an in-memory H2 database)
+│   └── Dockerfile
+├── frontend/
+│   ├── css/                     base, layout, components, pages, helpers
+│   ├── js/                      one script per page + shared api.js / websocket.js
+│   └── *.html
+└── docs/
+```
 
-**Database & Deployment:**
-- PostgreSQL (Hosted on Neon)
-- Render (Backend Docker Container Hosting)
-- Netlify (Frontend Hosting)
+## Running locally
 
----
+**Requirements:** JDK 21, Maven (or the included `mvnw`), PostgreSQL.
 
-## 🚀 Local Development Setup
+1. Create a database:
 
-### Prerequisites
-- JDK 21+
-- PostgreSQL 15+
-- Maven
+   ```sql
+   CREATE DATABASE proctor_saas;
+   ```
 
-### 1. Database Configuration
-Create a local PostgreSQL database named `proctor_saas`.
+2. Start the backend. It runs on `http://localhost:8080`, and Hibernate creates the tables on first start.
 
-### 2. Backend Setup
-Navigate to the backend directory and run the Spring Boot application:
+   ```bash
+   cd backend
+   ./mvnw spring-boot:run
+   ```
+
+3. Serve the frontend, then open `http://localhost:3000`. The frontend calls `localhost:8080` automatically when it runs on localhost.
+
+   ```bash
+   cd frontend
+   python -m http.server 3000
+   ```
+
+### Environment variables
+
+All have local defaults, so none are needed for local development. See `backend/.env.example`.
+
+| Variable | Purpose | Local default |
+| --- | --- | --- |
+| `DB_URL` | JDBC URL of the database | `jdbc:postgresql://localhost:5432/proctor_saas` |
+| `DB_USER` / `DB_PASS` | Database login | `postgres` / `postgre` |
+| `JWT_SECRET` | Base64 key used to sign tokens. **Always set this in production.** | development key |
+| `JWT_EXPIRATION` | Token lifetime in milliseconds | `86400000` (24 h) |
+| `FRONTEND_URL` | Allowed CORS origins, comma separated | `*` |
+| `SHOW_SQL` | Print SQL queries to the console | `false` |
+
+### Demo accounts
+
+On first start with an empty database, `DatabaseSeeder` creates one organization (`kletech`) and these accounts. All use the password `password`.
+
+| Role | Email |
+| --- | --- |
+| Super admin | `super@proctor.com` |
+| Organization admin | `admin@kletech.edu` |
+| Student | `student@kletech.edu` |
+
+## Running the tests
+
 ```bash
 cd backend
-mvn clean install -DskipTests
-mvn spring-boot:run
+./mvnw test
 ```
-The backend will automatically start on `http://localhost:8080`. Hibernate will automatically generate the required database tables via the `update` DDL strategy.
 
-### 3. Frontend Setup
-Navigate to the frontend directory and serve the static files. You can use any static file server (e.g., VS Code Live Server or Python):
-```bash
-cd frontend
-python -m http.server 3000
+The tests use an in-memory H2 database, so PostgreSQL does not need to be running.
+
+## API overview
+
+All endpoints are under `/api/v1`. Every endpoint except login needs `Authorization: Bearer <token>`. Tenant-scoped endpoints also need `X-Tenant-ID: <tenant slug>`.
+
+| Method | Endpoint | Role |
+| --- | --- | --- |
+| POST | `/auth/login` | public |
+| GET, POST | `/organizations` | SUPER_ADMIN |
+| POST | `/organizations/{id}/admin` | SUPER_ADMIN |
+| GET | `/system/stats` | SUPER_ADMIN |
+| POST | `/exams` | ORG_ADMIN |
+| POST | `/exams/{id}/assign` | ORG_ADMIN |
+| PUT | `/exams/{id}/status` | ORG_ADMIN |
+| GET | `/exams`, `/exams/{id}` | ORG_ADMIN, STUDENT |
+| GET | `/exams/missed` | STUDENT |
+| POST | `/attempts/start?examId=` | STUDENT |
+| POST | `/attempts/{id}/submit` | STUDENT |
+| GET | `/attempts/my-active` | STUDENT |
+| GET | `/attempts/active` | ORG_ADMIN |
+| POST | `/attempts/{id}/grade` | ORG_ADMIN |
+| GET | `/attempts/history`, `/attempts/{id}/logs`, `/attempts/{id}/answers` | ORG_ADMIN, STUDENT (own data only) |
+| GET, POST | `/users/students`, `/users`, `/users/students/bulk` | ORG_ADMIN |
+| GET, PUT | `/users/me`, `/users/me/password` | any logged-in user |
+| GET | `/analytics/dashboard` | ORG_ADMIN |
+| GET, POST, PUT | `/messages/...` | any logged-in user |
+
+Errors always use the same JSON format:
+
+```json
+{ "timestamp": "...", "status": 404, "error": "Not Found", "message": "exam not found", "path": "/api/v1/exams/..." }
 ```
-Open `http://localhost:3000` in your browser. The frontend is configured to automatically route API calls to `localhost:8080` when run locally.
 
----
+## Deployment
 
-## 📚 Database Schema Overview
-The platform uses a highly normalized relational database structure:
-- `organizations`: Tenant data.
-- `users`: Authenticated accounts tied to an organization.
-- `exams` & `questions` & `options`: Hierarchical exam creation data.
-- `exam_submissions` & `submission_details`: Tracks student progress and granular answer selections.
+- **Backend:** Render builds `backend/Dockerfile`, a multi-stage build that compiles with Maven and runs on a slim Java 21 JRE image. Set the environment variables above in Render.
+- **Frontend:** the `frontend` folder is deployed as a static site on Netlify.
+- **Database:** PostgreSQL on Neon.
 
----
+## License
 
-## 🤝 Contributing
-Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/TusharS230/exam-proctor-system/issues).
-
-## 📄 License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT, see [LICENSE](LICENSE).

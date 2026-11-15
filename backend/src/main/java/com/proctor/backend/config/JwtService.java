@@ -18,6 +18,9 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
+    // name of the custom claim that stores the user's organization (tenant slug)
+    public static final String TENANT_CLAIM = "tenant";
+
     @Value("${jwt.secret}")
     private String secretKey;
 
@@ -29,7 +32,12 @@ public class JwtService {
         return extractClaim(token, Claims::getSubject);
     }
 
-    // generate a token for a suer
+    // extract the tenant slug the user belongs to ("SYSTEM" for the super admin)
+    public String extractTenant(String token) {
+        return extractClaim(token, claims -> claims.get(TENANT_CLAIM, String.class));
+    }
+
+    // generate a token for a user
     public String generateToken(UserDetails userDetails) {
         return generateToken(new HashMap<>(), userDetails);
     }

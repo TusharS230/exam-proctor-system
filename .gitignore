@@ -2,6 +2,11 @@
 .DS_Store
 .vscode/
 .idea/
+out/
+.env
+
+# IDE plugin files
+.github/modernize/
 
 # Backend (Java/Maven)
 backend/target/
@@ -13,4 +18,4 @@ backend/*.log
 # Frontend (Node)
 frontend/node_modules/
 frontend/dist/
-frontend/.env
+frontend/.env

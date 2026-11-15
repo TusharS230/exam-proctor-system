@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class UserService {
 
+    private static final int MIN_PASSWORD_LENGTH = 6;
+
     private final UserRepository userRepository;
     private final OrganizationRepository organizationRepository;
     private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
@@ -26,13 +28,19 @@ public class UserService {
 
         // fetch the parent organization or crash if someone passes a fake header
         Organization organization = organizationRepository.findByTenantSlug(tenantSlug)
-                .orElseThrow(() -> new RuntimeException("CRITICAL: Organization not found for tenant slug: " + tenantSlug));
+                .orElseThrow(() -> new com.proctor.backend.exception.ResourceNotFoundException("Organization not found for tenant: " + tenantSlug));
+
+        // org admins can only add students; admins are created by the super admin
+        if (request.getRole() != null && request.getRole() != com.proctor.backend.model.UserRole.STUDENT) {
+            throw new IllegalArgumentException("Only student accounts can be created here");
+        }
+        validateNewAccount(request);
 
         // hydrate the new user entity and link the foreign key relationships
         User user = User.builder()
-                .email(request.getEmail())
+                .email(request.getEmail().trim())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .role(request.getRole())
+                .role(com.proctor.backend.model.UserRole.STUDENT)
                 .organization(organization)
                 .build();
 
@@ -50,7 +58,7 @@ public class UserService {
     public java.util.List<User> getAllStudents() {
         String tenantSlug = TenantContext.getCurrentTenant();
         Organization organization = organizationRepository.findByTenantSlug(tenantSlug)
-                .orElseThrow(() -> new RuntimeException("Organization not found"));
+                .orElseThrow(() -> new com.proctor.backend.exception.ResourceNotFoundException("Organization not found"));
 
         return userRepository.findByOrganizationIdAndRole(organization.getId(), com.proctor.backend.model.UserRole.STUDENT);
     }
@@ -60,6 +68,7 @@ public class UserService {
         String tenantSlug = TenantContext.getCurrentTenant();
         
         User student = userRepository.findById(studentId)
+                .filter(u -> u.getRole() == com.proctor.backend.model.UserRole.STUDENT)
                 .filter(u -> u.getOrganization().getTenantSlug().equals(tenantSlug))
                 .orElseThrow(() -> new com.proctor.backend.exception.ResourceNotFoundException("Student not found"));
                 
@@ -82,8 +91,10 @@ public class UserService {
         Organization organization = organizationRepository.findById(organizationId)
                 .orElseThrow(() -> new com.proctor.backend.exception.ResourceNotFoundException("Organization not found"));
 
+        validateNewAccount(request);
+
         User admin = User.builder()
-                .email(request.getEmail())
+                .email(request.getEmail().trim())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .role(com.proctor.backend.model.UserRole.ORG_ADMIN)
                 .organization(organization)
@@ -96,15 +107,16 @@ public class UserService {
     public java.util.List<User> createBulkStudents(java.util.List<CreateUserRequest> requests) {
         String tenantSlug = TenantContext.getCurrentTenant();
         Organization organization = organizationRepository.findByTenantSlug(tenantSlug)
-                .orElseThrow(() -> new RuntimeException("Organization not found"));
+                .orElseThrow(() -> new com.proctor.backend.exception.ResourceNotFoundException("Organization not found"));
 
         java.util.List<User> students = new java.util.ArrayList<>();
         for (CreateUserRequest request : requests) {
-            // Optional: check if email already exists to skip or fail
-            if (userRepository.findByEmail(request.getEmail()).isPresent()) continue;
+            // skip empty rows and emails that already have an account
+            if (request.getEmail() == null || request.getEmail().isBlank() || request.getPassword() == null) continue;
+            if (userRepository.findByEmail(request.getEmail().trim()).isPresent()) continue;
 
             User student = User.builder()
-                    .email(request.getEmail())
+                    .email(request.getEmail().trim())
                     .passwordHash(passwordEncoder.encode(request.getPassword()))
                     .role(com.proctor.backend.model.UserRole.STUDENT)
                     .organization(organization)
@@ -120,9 +132,11 @@ public class UserService {
         String tenantSlug = TenantContext.getCurrentTenant();
         
         User student = userRepository.findById(studentId)
+                .filter(u -> u.getRole() == com.proctor.backend.model.UserRole.STUDENT)
                 .filter(u -> u.getOrganization().getTenantSlug().equals(tenantSlug))
                 .orElseThrow(() -> new com.proctor.backend.exception.ResourceNotFoundException("Student not found"));
-                
+
+        validatePassword(newPassword);
         student.setPasswordHash(passwordEncoder.encode(newPassword));
         userRepository.save(student);
         log.info("Reset password for student {}", student.getEmail());
@@ -136,9 +150,27 @@ public class UserService {
         if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
             throw new IllegalArgumentException("Current password is incorrect");
         }
-        
+        validatePassword(newPassword);
+
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         userRepository.save(user);
         log.info("Password changed successfully for user {}", email);
+    }
+
+    // basic checks before creating any account
+    private void validateNewAccount(CreateUserRequest request) {
+        if (request.getEmail() == null || request.getEmail().isBlank()) {
+            throw new IllegalArgumentException("Email is required");
+        }
+        validatePassword(request.getPassword());
+        if (userRepository.findByEmail(request.getEmail().trim()).isPresent()) {
+            throw new IllegalStateException("An account with this email already exists");
+        }
+    }
+
+    private void validatePassword(String password) {
+        if (password == null || password.length() < MIN_PASSWORD_LENGTH) {
+            throw new IllegalArgumentException("Password must be at least " + MIN_PASSWORD_LENGTH + " characters");
+        }
     }
 }

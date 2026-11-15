@@ -1,5 +1,6 @@
 package com.proctor.backend.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import com.proctor.backend.service.AnalyticsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +17,7 @@ public class AnalyticsController {
 
     private final AnalyticsService analyticsService;
 
+    @PreAuthorize("hasRole('ORG_ADMIN')")
     @GetMapping("/dashboard")
     public ResponseEntity<Map<String, Object>> getDashboardStats(
             @org.springframework.web.bind.annotation.RequestParam(defaultValue = "today") String timeframe) {

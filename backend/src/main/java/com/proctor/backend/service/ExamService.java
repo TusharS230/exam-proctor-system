@@ -40,7 +40,7 @@ public class ExamService {
         log.info("Creating new exam tenant: {}", tenantSlug);
 
         Organization organization = organizationRepository.findByTenantSlug(tenantSlug)
-                .orElseThrow(() -> new RuntimeException("Organization not found for tenant: " + tenantSlug));
+                .orElseThrow(() -> new ResourceNotFoundException("Organization not found for tenant: " + tenantSlug));
 
         // initialize the parent exam entity
         Exam exam = Exam.builder()

@@ -1,5 +1,6 @@
 package com.proctor.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
@@ -31,6 +32,8 @@ public class Question {
     @Column(name = "marks", nullable = false)
     private Integer marks;
 
+    // never sent to the browser, otherwise students could read the answers in the Network tab
+    @JsonIgnore
     @Column(name = "correct_answer", columnDefinition = "TEXT")
     private String correctAnswer;
 

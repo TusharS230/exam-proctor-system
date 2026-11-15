@@ -1,5 +1,6 @@
 package com.proctor.backend.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import com.proctor.backend.dto.CreateExamRequest;
 import com.proctor.backend.model.Exam;
 import com.proctor.backend.service.ExamService;
@@ -18,6 +19,7 @@ public class ExamController {
     private final ExamService examService;
 
     // POST Endpoint: Create an exam with all its nested questions
+    @PreAuthorize("hasRole('ORG_ADMIN')")
     @PostMapping
     public ResponseEntity<Exam> createExam(@RequestBody CreateExamRequest request) {
         Exam savedExam = examService.createExam(request);
@@ -25,6 +27,7 @@ public class ExamController {
     }
 
     // GET Endpoint: Fetch a specific exam by its ID (Securely!)
+    @PreAuthorize("hasAnyRole('ORG_ADMIN', 'STUDENT')")
     @GetMapping("/{examId}")
     public ResponseEntity<Exam> getExam(@PathVariable UUID examId) {
         Exam exam = examService.getExamById(examId);
@@ -32,26 +35,30 @@ public class ExamController {
     }
 
     // GET Endpoint: Fetch all exams for the current organization
+    @PreAuthorize("hasAnyRole('ORG_ADMIN', 'STUDENT')")
     @GetMapping
     public ResponseEntity<java.util.List<Exam>> getAllExams() {
         return ResponseEntity.ok(examService.getAllExams());
     }
 
     // GET Endpoint: Fetch missed exams for the current student
+    @PreAuthorize("hasRole('STUDENT')")
     @GetMapping("/missed")
     public ResponseEntity<java.util.List<Exam>> getMissedExams() {
         return ResponseEntity.ok(examService.getMissedExams());
     }
 
+    @PreAuthorize("hasRole('ORG_ADMIN')")
     @PostMapping("/{examId}/assign")
     public ResponseEntity<Exam> assignExam(@PathVariable UUID examId, @RequestBody java.util.List<UUID> studentIds) {
         Exam updatedExam = examService.assignExam(examId, studentIds);
         return ResponseEntity.ok(updatedExam);
     }
 
+    @PreAuthorize("hasRole('ORG_ADMIN')")
     @PutMapping("/{examId}/status")
     public ResponseEntity<Exam> updateExamStatus(@PathVariable UUID examId, @RequestParam String status) {
         Exam updatedExam = examService.updateExamStatus(examId, status);
         return ResponseEntity.ok(updatedExam);
     }
-}
+}

@@ -11,9 +11,13 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
+
+    public static final String SYSTEM_TENANT = "SYSTEM";
 
     private final UserRepository userRepository;
     private final JwtService jwtService;
@@ -31,14 +35,16 @@ public class AuthenticationService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new ResourceNotFoundException("user not found"));
 
-        // generate jwt token
-        String jwtToken = jwtService.generateToken(user);
+        // the super admin does not belong to any organization
+        String tenantSlug = user.getOrganization() != null ? user.getOrganization().getTenantSlug() : SYSTEM_TENANT;
 
-        // return it to the client
+        // the tenant goes inside the signed token, so the client cannot change it
+        String jwtToken = jwtService.generateToken(Map.of(JwtService.TENANT_CLAIM, tenantSlug), user);
+
         return AuthenticationResponse.builder()
                 .token(jwtToken)
                 .role(user.getRole().name())
-                .tenantSlug(user.getOrganization() != null ? user.getOrganization().getTenantSlug() : "SYSTEM")
+                .tenantSlug(tenantSlug)
                 .build();
     }
 }

@@ -1,5 +1,6 @@
 package com.proctor.backend.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import com.proctor.backend.dto.CreateUserRequest;
 import com.proctor.backend.model.User;
 import com.proctor.backend.service.UserService;
@@ -18,29 +19,34 @@ public class UserController {
 
     private final UserService userService;
 
+    @PreAuthorize("hasRole('ORG_ADMIN')")
     @PostMapping
     public ResponseEntity<User> createUser(@RequestBody CreateUserRequest request) {
         User savedUser = userService.createUser(request);
         return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
     }
 
+    @PreAuthorize("hasRole('ORG_ADMIN')")
     @org.springframework.web.bind.annotation.GetMapping("/students")
     public ResponseEntity<java.util.List<User>> getAllStudents() {
         return ResponseEntity.ok(userService.getAllStudents());
     }
 
+    @PreAuthorize("hasRole('ORG_ADMIN')")
     @PostMapping("/students/{id}/revoke")
     public ResponseEntity<Void> revokeAccess(@org.springframework.web.bind.annotation.PathVariable java.util.UUID id) {
         userService.revokeAccess(id);
         return ResponseEntity.ok().build();
     }
 
+    @PreAuthorize("hasRole('ORG_ADMIN')")
     @PostMapping("/students/bulk")
     public ResponseEntity<java.util.List<User>> createBulkStudents(@RequestBody java.util.List<CreateUserRequest> requests) {
         java.util.List<User> savedUsers = userService.createBulkStudents(requests);
         return new ResponseEntity<>(savedUsers, HttpStatus.CREATED);
     }
 
+    @PreAuthorize("hasRole('ORG_ADMIN')")
     @PostMapping("/students/{id}/reset-password")
     public ResponseEntity<Void> resetPassword(
             @org.springframework.web.bind.annotation.PathVariable java.util.UUID id,
@@ -53,12 +59,9 @@ public class UserController {
     public ResponseEntity<Void> changeMyPassword(
             java.security.Principal principal,
             @RequestBody com.proctor.backend.dto.ChangePasswordRequest request) {
-        try {
-            userService.changeMyPassword(principal.getName(), request.getCurrentPassword(), request.getNewPassword());
-            return ResponseEntity.ok().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
-        }
+        // a wrong current password becomes a 400 with a clear message (see GlobalExceptionHandler)
+        userService.changeMyPassword(principal.getName(), request.getCurrentPassword(), request.getNewPassword());
+        return ResponseEntity.ok().build();
     }
 
     @org.springframework.web.bind.annotation.GetMapping("/me")

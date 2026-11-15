@@ -15,6 +15,8 @@ import com.proctor.backend.repository.QuestionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +31,9 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class ExamAttemptService {
+
+    // extra time allowed after the timer ends, to cover slow networks
+    private static final long SUBMIT_GRACE_MINUTES = 2;
 
     private final ExamAttemptRepository attemptRepository;
     private final AnswerRepository answerRepository;
@@ -53,6 +58,25 @@ public class ExamAttemptService {
         Exam exam = examRepository.findById(examId)
                 .filter(e -> e.getOrganization().getTenantSlug().equals(tenantSlug))
                 .orElseThrow(() -> new ResourceNotFoundException("exam not found"));
+
+        // only students assigned to this exam may take it
+        boolean isAssigned = exam.getAssignedStudents() != null
+                && exam.getAssignedStudents().stream().anyMatch(s -> s.getId().equals(student.getId()));
+        if (!isAssigned) {
+            throw new AccessDeniedException("You are not assigned to this exam");
+        }
+
+        // the exam must be open right now
+        OffsetDateTime now = OffsetDateTime.now();
+        if (!"ACTIVE".equals(exam.getStatus())) {
+            throw new IllegalStateException("This exam is not active");
+        }
+        if (exam.getScheduledStartTime() != null && now.isBefore(exam.getScheduledStartTime())) {
+            throw new IllegalStateException("This exam has not started yet");
+        }
+        if (exam.getScheduledEndTime() != null && now.isAfter(exam.getScheduledEndTime())) {
+            throw new IllegalStateException("This exam has already ended");
+        }
 
         // anti cheat, prevent multiple attempts
         if(attemptRepository.findByStudentIdAndExamId(student.getId(), examId).isPresent()) {
@@ -117,9 +141,26 @@ public class ExamAttemptService {
                 .filter(a -> a.getExam().getOrganization().getTenantSlug().equals(tenantSlug))
                 .orElseThrow(() -> new ResourceNotFoundException("exam attempt not found"));
 
+        // only the student who started the attempt can submit it
+        String currentUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (!attempt.getStudent().getEmail().equals(currentUserEmail)) {
+            throw new AccessDeniedException("This attempt belongs to another student");
+        }
+
         // check: you can't submit exam that is already finished
         if(attempt.getStatus() != AttemptStatus.IN_PROGRESS) {
             throw new IllegalStateException("this exam is no longer in progress");
+        }
+
+        // the timer runs in the browser, so check the time limit on the server too.
+        // a late submission is still saved, but flagged for the admin.
+        if (isLate(attempt, OffsetDateTime.now())) {
+            ProctorLog lateLog = new ProctorLog();
+            lateLog.setExamAttemptId(attempt.getId().toString());
+            lateLog.setEventType("LATE_SUBMISSION");
+            lateLog.setDetails("Submitted after the " + attempt.getExam().getDurationMinutes() + " minute time limit.");
+            proctorLogRepository.save(lateLog);
+            log.warn("Late submission for attempt {}", attemptId);
         }
 
         // map, evaluate, and score the student's answers in memory
@@ -170,6 +211,17 @@ public class ExamAttemptService {
     }
 
     // Private helper methods
+
+    // true when the attempt is submitted after its duration plus the grace period
+    boolean isLate(ExamAttempt attempt, OffsetDateTime submittedAt) {
+        Integer duration = attempt.getExam().getDurationMinutes();
+        if (duration == null || attempt.getStartedAt() == null) {
+            return false;
+        }
+        OffsetDateTime deadline = attempt.getStartedAt().plusMinutes(duration + SUBMIT_GRACE_MINUTES);
+        return submittedAt.isAfter(deadline);
+    }
+
     private List<Answer> mapStudentAnswersToQuestions(SubmitExamRequest request, ExamAttempt attempt) {
         // map the exam's official questions into memory for ultra-fast lookups
         Map<UUID, Question> officialQuestions = attempt.getExam().getQuestions().stream()
@@ -239,7 +291,7 @@ public class ExamAttemptService {
         boolean isOrgAdmin = user.getRole() == com.proctor.backend.model.UserRole.ORG_ADMIN && attempt.getExam().getOrganization().getId().equals(user.getOrganization().getId());
 
         if (!isStudent && !isOrgAdmin) {
-            throw new RuntimeException("Unauthorized to view logs for this attempt");
+            throw new AccessDeniedException("You are not allowed to view logs for this attempt");
         }
 
         return proctorLogRepository.findByExamAttemptId(attemptId.toString());
@@ -308,7 +360,7 @@ public class ExamAttemptService {
                             && currentUser.getOrganization().getId().equals(attempt.getExam().getOrganization().getId());
 
         if (!isOwner && !isOrgAdmin) {
-            throw new RuntimeException("Unauthorized to view answers");
+            throw new AccessDeniedException("You are not allowed to view these answers");
         }
 
         List<Answer> answers = answerRepository.findByExamAttemptId(attemptId);
