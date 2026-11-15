@@ -255,7 +255,8 @@
     color: var(--red);
 }
 
-.status-active {
+.status-active,
+.status-online {
     color: var(--blue);
 }
 

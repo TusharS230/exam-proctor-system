@@ -226,14 +226,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
 
             // GLOBAL WEBSOCKET CONNECTION
-            if (typeof ProctorWebSocket !== 'undefined') {
-                const wsUrl = ApiClient.BASE_URL.replace('/api/v1', '') + '/ws-proctor';
-                const wsClient = new ProctorWebSocket(wsUrl);
-
-                wsClient.onConnect(() => {
+            if (window.proctorWS) {
+                window.proctorWS.onConnect(() => {
                     console.log("Global WebSocket connected.");
                     const orgId = user.organization ? user.organization.id : null;
-                    wsClient.subscribeToMessages(user.role, user.id, orgId, (newMsg) => {
+                    window.proctorWS.subscribeToMessages(user.role, user.id, orgId, (newMsg) => {
                         if (newMsg.senderId === user.id) return;
 
                         // Dispatch event so messages.js can update the thread view
@@ -254,7 +251,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         }
                     });
                 });
-                wsClient.connect(token, tenant);
+                window.proctorWS.connect(token, tenant);
             }
         }
     } catch(e) {

@@ -53,36 +53,48 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Setup WebSocket callbacks
-    window.proctorWS.onConnect(() => {
-        // Subscribe globally to the tenant's alerts
-        window.proctorWS.subscribeToTenantAlerts(tenantId, (alertData) => {
-            addAlertToFeed(alertData);
+    const statusBadge = document.getElementById('connectionStatus');
 
-            // If the alert is a status change, reload the active candidates list and analytics
-            if (alertData.eventType === 'EXAM_STARTED' || alertData.eventType === 'EXAM_COMPLETED') {
-                // Wait briefly before fetching active candidates to ensure backend transactions have fully committed
-                setTimeout(() => {
-                    loadActiveCandidates();
-                    loadQuickAnalytics();
-                }, 500);
+    if (window.proctorWS) {
+        window.proctorWS.onConnect(() => {
+            if (statusBadge) {
+                statusBadge.className = 'status-badge status-online';
+                statusBadge.textContent = 'Live';
+            }
+
+            // Subscribe globally to the tenant's alerts
+            window.proctorWS.subscribeToTenantAlerts(tenantId, (alertData) => {
+                addAlertToFeed(alertData);
+
+                // If the alert is a status change, reload the active candidates list and analytics
+                if (alertData.eventType === 'EXAM_STARTED' || alertData.eventType === 'EXAM_COMPLETED') {
+                    // Wait briefly before fetching active candidates to ensure backend transactions have fully committed
+                    setTimeout(() => {
+                        loadActiveCandidates();
+                        loadQuickAnalytics();
+                    }, 500);
+                }
+            });
+
+            // Add a system message
+            const sysAlert = {
+                eventType: 'SYSTEM',
+                details: `Successfully connected to global live stream for organization.`,
+                timestamp: new Date().toISOString()
+            };
+            addAlertToFeed(sysAlert);
+        });
+
+        window.proctorWS.onDisconnect(() => {
+            if (statusBadge) {
+                statusBadge.className = 'status-badge status-offline';
+                statusBadge.textContent = 'Offline';
             }
         });
 
-        // Add a system message
-        const sysAlert = {
-            eventType: 'SYSTEM',
-            details: `Successfully connected to global live stream for organization.`,
-            timestamp: new Date().toISOString()
-        };
-        addAlertToFeed(sysAlert);
-    });
-
-    window.proctorWS.onDisconnect(() => {
-        // Do nothing on disconnect now, UI removed
-    });
-
-    // Automatically connect on load
-    window.proctorWS.connect(token, tenantId);
+        // Automatically connect on load
+        window.proctorWS.connect(token, tenantId);
+    }
 
     // API Integration: Fetch Active Candidates
     async function loadActiveCandidates() {

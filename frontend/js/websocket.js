@@ -4,8 +4,18 @@ class ProctorWebSocket {
         this.wsUrl = wsUrl;
         this.stompClient = null;
         this.isConnected = false;
+        this.isConnecting = false;
         this.onConnectCallbacks = [];
         this.onDisconnectCallbacks = [];
+    }
+
+    resolveWsUrl() {
+        if (this.wsUrl) return this.wsUrl;
+        if (typeof ApiClient !== 'undefined' && ApiClient.BASE_URL) {
+            return ApiClient.BASE_URL.replace('/api/v1', '') + '/ws-proctor';
+        }
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        return isLocal ? 'http://localhost:8080/ws-proctor' : 'https://exam-proctor-system.onrender.com/ws-proctor';
     }
 
     connect(token, tenantId = sessionStorage.getItem('tenant_id')) {
@@ -14,7 +24,18 @@ class ProctorWebSocket {
             return;
         }
 
-        const socket = new SockJS(this.wsUrl);
+        if (this.isConnected || this.isConnecting) {
+            return;
+        }
+
+        if (typeof SockJS === 'undefined' || typeof Stomp === 'undefined') {
+            console.warn("SockJS or Stomp library is not loaded.");
+            return;
+        }
+
+        this.isConnecting = true;
+        const targetUrl = this.resolveWsUrl();
+        const socket = new SockJS(targetUrl);
         this.stompClient = Stomp.over(socket);
 
         // Disable debug logs in production
@@ -28,12 +49,18 @@ class ProctorWebSocket {
         this.stompClient.connect(headers,
             (frame) => {
                 this.isConnected = true;
-                this.onConnectCallbacks.forEach(cb => cb(frame));
+                this.isConnecting = false;
+                this.onConnectCallbacks.forEach(cb => {
+                    try { cb(frame); } catch(e) { console.error("Error in onConnect callback:", e); }
+                });
             },
             (error) => {
                 this.isConnected = false;
+                this.isConnecting = false;
                 console.error('WebSocket connection error:', error);
-                this.onDisconnectCallbacks.forEach(cb => cb(error));
+                this.onDisconnectCallbacks.forEach(cb => {
+                    try { cb(error); } catch(e) { console.error("Error in onDisconnect callback:", e); }
+                });
 
                 // Implement basic retry logic
                 setTimeout(() => this.connect(token, tenantId), 5000);
@@ -45,7 +72,10 @@ class ProctorWebSocket {
         if (this.stompClient !== null && this.isConnected) {
             this.stompClient.disconnect(() => {
                 this.isConnected = false;
-                this.onDisconnectCallbacks.forEach(cb => cb());
+                this.isConnecting = false;
+                this.onDisconnectCallbacks.forEach(cb => {
+                    try { cb(); } catch(e) { console.error("Error in onDisconnect callback:", e); }
+                });
             });
         }
     }
@@ -125,11 +155,21 @@ class ProctorWebSocket {
     }
 
     onConnect(callback) {
+        if (typeof callback !== 'function') return;
         this.onConnectCallbacks.push(callback);
+        if (this.isConnected) {
+            try { callback(); } catch(e) { console.error("Error in onConnect callback:", e); }
+        }
     }
 
     onDisconnect(callback) {
+        if (typeof callback !== 'function') return;
         this.onDisconnectCallbacks.push(callback);
     }
+}
+
+// Global shared WebSocket instance
+if (typeof window !== 'undefined') {
+    window.proctorWS = new ProctorWebSocket();
 }
 
