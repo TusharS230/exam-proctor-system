@@ -8,6 +8,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Slf4j
@@ -64,12 +65,17 @@ public class DatabaseSeeder implements CommandLineRunner {
         userRepository.saveAll(List.of(superAdmin, admin, student));
         log.info("Created Users: super@proctor.com, admin@kletech.edu, student@kletech.edu (password: password)");
 
-        // 3. Create an Exam
+        // 3. Create an Exam that is open for the next 30 days and assigned to the demo student,
+        //    so a fresh setup has something to try straight away
+        OffsetDateTime now = OffsetDateTime.now();
         Exam exam = Exam.builder()
                 .organization(kletech)
                 .title("Midterm Examination - Advanced Architecture")
                 .description("Comprehensive test covering cloud computing and advanced system architectures.")
                 .durationMinutes(60)
+                .scheduledStartTime(now)
+                .scheduledEndTime(now.plusDays(30))
+                .assignedStudents(new java.util.ArrayList<>(List.of(student)))
                 .build();
         examRepository.save(exam);
         log.info("Created Exam: {}", exam.getTitle());
@@ -80,6 +86,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                 .questionText("Which of the following cloud computing deployment models is characterized by infrastructure that is provisioned for exclusive use by a single organization comprising multiple consumers?")
                 .questionType(QuestionType.MULTIPLE_CHOICE)
                 .marks(5)
+                .options(new java.util.ArrayList<>(List.of("Public Cloud", "Private Cloud", "Community Cloud", "Hybrid Cloud")))
                 .correctAnswer("Private Cloud")
                 .build();
 

@@ -4,6 +4,8 @@ A multi-tenant online examination platform. Several colleges (tenants) share one
 
 **Live demo:** https://exxamproctor.netlify.app
 
+The backend runs on Render's free plan, so the first request after a quiet period can take up to a minute while the server wakes up.
+
 ## Features
 
 - **Multi-tenant:** every organization has a unique tenant slug (for example `kletech`). The tenant is stored inside the signed JWT, and every request is checked against it.
@@ -11,10 +13,13 @@ A multi-tenant online examination platform. Several colleges (tenants) share one
   - `SUPER_ADMIN` onboards organizations and creates their first admin.
   - `ORG_ADMIN` adds students, creates and assigns exams, watches live exams, and grades written answers.
   - `STUDENT` takes assigned exams and sees past results.
-- **Exams:** multiple-choice questions are graded automatically when the student submits. Text answers wait for manual grading by the admin.
+- **Scheduled exams:** every exam has a start and an end time. Students see their upcoming and open exams with a countdown to the start or the end, and an exam leaves their list once it closes.
+- **Automatic closing:** a background job runs every minute. When an exam's end time passes, it moves to "Past", and any attempt still in progress is submitted and flagged as late.
+- **Grading:** multiple-choice questions are graded automatically when the student submits. The admin opens a submission from Reports, sees each answer next to the expected answer, and marks the written answers. Correct answers are never sent to students' browsers.
 - **Live proctoring:** the exam page reports tab switches, window blur, copy/cut/paste and right-clicks over WebSockets (STOMP). The admin dashboard receives them instantly.
 - **Server-side checks:** a student can only start exams assigned to them, only once, and only while the exam is open. Late submissions are saved but flagged.
-- **Messaging** between students, their organization's admin, and the super admin.
+- **Messaging** between students, their organization's admin, and the super admin, with separate inbox and sent views.
+- **Student management:** add students one by one or in bulk, reset a student's password, or revoke their access.
 
 ## Tech stack
 
@@ -109,7 +114,7 @@ All have local defaults, so none are needed for local development. See `backend/
 
 ### Demo accounts
 
-On first start with an empty database, `DatabaseSeeder` creates one organization (`kletech`) and these accounts. All use the password `password`.
+On first start with an empty database, `DatabaseSeeder` creates one organization (`kletech`), these accounts, and a sample exam that is open for 30 days and assigned to the demo student. All accounts use the password `password`. Change them after your first login if the database is reachable from the internet.
 
 | Role | Email |
 | --- | --- |
@@ -124,7 +129,7 @@ cd backend
 ./mvnw test
 ```
 
-The tests use an in-memory H2 database, so PostgreSQL does not need to be running.
+The tests use an in-memory H2 database, so PostgreSQL does not need to be running. They cover the main rules: students can only take assigned exams, exams need a valid schedule and close on time, late submissions are flagged, and users can only read message threads they belong to.
 
 ## API overview
 
@@ -148,6 +153,7 @@ All endpoints are under `/api/v1`. Every endpoint except login needs `Authorizat
 | POST | `/attempts/{id}/grade` | ORG_ADMIN |
 | GET | `/attempts/history`, `/attempts/{id}/logs`, `/attempts/{id}/answers` | ORG_ADMIN, STUDENT (own data only) |
 | GET, POST | `/users/students`, `/users`, `/users/students/bulk` | ORG_ADMIN |
+| POST | `/users/students/{id}/reset-password`, `/users/students/{id}/revoke` | ORG_ADMIN |
 | GET, PUT | `/users/me`, `/users/me/password` | any logged-in user |
 | GET | `/analytics/dashboard` | ORG_ADMIN |
 | GET, POST, PUT | `/messages/...` | any logged-in user |
