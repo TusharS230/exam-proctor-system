@@ -114,7 +114,7 @@ All have local defaults, so none are needed for local development. See `backend/
 
 ### Demo accounts
 
-On first start with an empty database, `DatabaseSeeder` creates one organization (`kletech`), these accounts, and a sample exam that is open for 30 days and assigned to the demo student. All accounts use the password `password`.
+On first start with an empty database, `DatabaseSeeder` creates one organization (`kletech`), these accounts, and a sample exam that is open for 30 days and assigned to the demo student.
 
 | Role | Email |
 | --- | --- |
