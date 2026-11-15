@@ -23,5 +23,7 @@ public class AnswerResponseDto {
         private String questionText;
         private QuestionType questionType;
         private Integer marks;
+        // the answer the admin wrote when creating the exam; only sent to admins
+        private String expectedAnswer;
     }
 }

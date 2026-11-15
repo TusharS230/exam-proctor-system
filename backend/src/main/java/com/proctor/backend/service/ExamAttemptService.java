@@ -316,7 +316,8 @@ public class ExamAttemptService {
         if (request.getGrades() != null) {
             for (com.proctor.backend.dto.GradeSubmissionRequest.GradeItem item : request.getGrades()) {
                 Answer answer = answerMap.get(item.getAnswerId());
-                if (answer != null) {
+                // multiple choice answers are graded automatically and cannot be changed by hand
+                if (answer != null && answer.getQuestion().getQuestionType() != com.proctor.backend.model.QuestionType.MULTIPLE_CHOICE) {
                     Integer awarded = item.getMarksAwarded();
                     Integer maxMarks = answer.getQuestion().getMarks();
                     if (awarded != null && maxMarks != null) {
@@ -371,8 +372,10 @@ public class ExamAttemptService {
                     .questionText(ans.getQuestion().getQuestionText())
                     .questionType(ans.getQuestion().getQuestionType())
                     .marks(ans.getQuestion().getMarks())
+                    // admins see the expected answer to help them grade; students never do
+                    .expectedAnswer(isOrgAdmin ? ans.getQuestion().getCorrectAnswer() : null)
                     .build();
-            
+
             return com.proctor.backend.dto.AnswerResponseDto.builder()
                     .id(ans.getId())
                     .providedAnswer(ans.getProvidedAnswer())

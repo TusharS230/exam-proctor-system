@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const tbody = document.getElementById('historyTableBody');
     let allAttempts = [];
     let currentView = 'grouped';
+    let currentExamId = null;
     let currentExamTitle = '';
     let currentAttempts = [];
 
@@ -68,9 +69,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (currentView === 'grouped') {
             renderGroupedExams();
         } else {
-            // we need to get the latest filtered attempts for this specific exam
-            const freshFiltered = getFilteredAttempts().filter(a => a.exam?.title === currentExamTitle);
-            renderExamDetails(currentExamTitle, freshFiltered, false);
+            // the latest filtered attempts for the exam being viewed
+            const freshFiltered = getFilteredAttempts().filter(a => a.exam?.id === currentExamId);
+            renderExamDetails(currentExamId, currentExamTitle, freshFiltered);
         }
     }
 
@@ -100,40 +101,50 @@ document.addEventListener('DOMContentLoaded', async () => {
                 grouped[examId] = {
                     title: attempt.exam.title,
                     attempts: [],
+                    gradedCount: 0,
                     totalScore: 0
                 };
             }
             grouped[examId].attempts.push(attempt);
+            // only graded attempts count towards the average
             if (attempt.totalScore != null) {
+                grouped[examId].gradedCount++;
                 grouped[examId].totalScore += attempt.totalScore;
             }
         });
 
-        Object.values(grouped).forEach(group => {
+        Object.entries(grouped).forEach(([examId, group]) => {
             const tr = document.createElement('tr');
-            const avg = Math.round(group.totalScore / group.attempts.length);
+            const pending = group.attempts.length - group.gradedCount;
 
-            let scoreClass = 'score-med';
-            if (avg >= 80) scoreClass = 'score-high';
-            else if (avg < 50) scoreClass = 'score-low';
+            let averageHtml = '<span class="muted">Not graded yet</span>';
+            if (group.gradedCount > 0) {
+                const avg = Math.round(group.totalScore / group.gradedCount);
+                const scoreClass = avg >= 80 ? 'score-high' : (avg < 50 ? 'score-low' : 'score-med');
+                averageHtml = `<span class="${scoreClass}">${avg}%</span>`;
+            }
+            if (pending > 0) {
+                averageHtml += ` <span class="small text-red">(${pending} to grade)</span>`;
+            }
 
             tr.innerHTML = `
                 <td class="bold">${escapeHtml(group.title)}</td>
                 <td>${group.attempts.length}</td>
-                <td class="${scoreClass}">${avg}%</td>
+                <td>${averageHtml}</td>
                 <td><button class="btn-primary view-btn small">View Details</button></td>
             `;
 
             tr.querySelector('.view-btn').addEventListener('click', () => {
                 const freshFiltered = getFilteredAttempts().filter(a => a.exam?.id === examId);
-                renderExamDetails(group.title, freshFiltered, true);
+                renderExamDetails(examId, group.title, freshFiltered);
             });
             tbody.appendChild(tr);
         });
     }
 
-    function renderExamDetails(examTitle, attempts, isNewTransition = false) {
+    function renderExamDetails(examId, examTitle, attempts) {
         currentView = 'details';
+        currentExamId = examId;
         currentExamTitle = examTitle;
         currentAttempts = attempts;
 
@@ -164,7 +175,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             let scoreClass = 'score-med';
             let scoreText = attempt.totalScore != null ? attempt.totalScore + '%' : 'N/A';
             if (attempt.status === 'SUBMITTED' && attempt.totalScore == null) {
-                scoreText = 'Pending Evaluation';
+                scoreText = 'Needs grading';
                 scoreClass = '';
             } else {
                 if (attempt.totalScore >= 80) scoreClass = 'score-high';
@@ -290,12 +301,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                     container.innerHTML += `
                         <div class="answer-block">
                             <div class="bold mb-1">Q${index + 1}: ${escapeHtml(q.questionText)}</div>
-                            <div class="small muted mb-1">Provided Answer:</div>
+                            <div class="small muted mb-1">Student's answer:</div>
                             <div class="answer-text">${escapeHtml(providedAns)}</div>
+                            ${q.expectedAnswer ? `
+                            <div class="small muted mb-1">Expected answer:</div>
+                            <div class="answer-text muted">${escapeHtml(q.expectedAnswer)}</div>` : ''}
 
                             <div class="flex align-center space-between">
                                 <div>
-                                    <span class="small muted">Type: ${q.questionType}</span>
+                                    <span class="small muted">Type: ${q.questionType}${ans.isCorrect === true && !isManual ? ' (correct)' : ''}${ans.isCorrect === false && !isManual ? ' (wrong)' : ''}</span>
                                 </div>
                                 <div class="flex align-center gap-1">
                                     <label class="small bold">Marks Awarded:</label>
@@ -336,14 +350,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         try {
             await ApiClient.post(`/attempts/${currentGradingAttemptId}/grade`, { grades });
-            Toast.show('success', 'Grades submitted successfully!');
+            Toast.success('Grades saved.');
             document.getElementById('gradingModal').style.display = 'none';
-            // Reload the list
-            const attempts = await ApiClient.get('/attempts/history');
-            allAttempts = attempts;
-            renderGroupedExams();
+            currentGradingAttemptId = null;
+
+            // reload and stay on the same exam, so the new score is visible
+            allAttempts = await ApiClient.get('/attempts/history') || [];
+            reRenderCurrentView();
         } catch (err) {
-            Toast.show('error', 'Failed to submit grades.');
+            // ApiClient already showed the error message
+            console.error(err);
         }
     });
 

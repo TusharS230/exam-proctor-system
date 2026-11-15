@@ -178,7 +178,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             if (requests.length === 0) {
-                alert("No valid students found in CSV.");
+                Toast.error("No valid students found in the CSV file.");
                 btn.disabled = false;
                 btn.textContent = 'Import Students';
                 return;

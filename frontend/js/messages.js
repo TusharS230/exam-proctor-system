@@ -89,36 +89,51 @@ document.addEventListener('DOMContentLoaded', async () => {
         threadView.style.display = 'none';
 
         try {
-            const messages = await ApiClient.get('/messages/inbox');
+            // received and sent messages together, so conversations you started also show up
+            const [received, sent] = await Promise.all([
+                ApiClient.get('/messages/inbox'),
+                ApiClient.get('/messages/sent')
+            ]);
+
+            const byId = {};
+            [...(received || []), ...(sent || [])].forEach(msg => { byId[msg.id] = msg; });
+            const messages = Object.values(byId);
 
             inboxTableBody.innerHTML = '';
-            if (!messages || messages.length === 0) {
-                inboxTableBody.innerHTML = '<tr><td class="text-center" colspan="4">No messages in your inbox.</td></tr>';
+            if (messages.length === 0) {
+                inboxTableBody.innerHTML = '<tr><td class="text-center" colspan="4">No messages yet.</td></tr>';
                 return;
             }
 
-            // Group by thread ID to just show the latest message per thread
+            // one row per conversation, showing its newest message
             const threadMap = {};
             messages.forEach(msg => {
-                if (!threadMap[msg.threadId]) {
-                    threadMap[msg.threadId] = [];
-                }
+                if (!threadMap[msg.threadId]) threadMap[msg.threadId] = [];
                 threadMap[msg.threadId].push(msg);
             });
 
-            Object.values(threadMap).forEach(thread => {
-                // sort by date desc
+            const threads = Object.values(threadMap).map(thread => {
                 thread.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                return thread;
+            });
+            // newest conversations first
+            threads.sort((a, b) => new Date(b[0].createdAt) - new Date(a[0].createdAt));
+
+            threads.forEach(thread => {
                 const latestMsg = thread[0];
+                const sentByMe = latestMsg.senderId === userId;
 
                 const tr = document.createElement('tr');
-                if (!latestMsg.read) tr.classList.add('bold');
+                // bold = someone else wrote to you and you have not opened it yet
+                if (!sentByMe && !latestMsg.read) tr.classList.add('bold');
 
-                const senderText = latestMsg.organizationName ? `${escapeHtml(latestMsg.senderEmail)} (${escapeHtml(latestMsg.organizationName)})` : latestMsg.senderEmail;
+                const fromOrTo = sentByMe
+                    ? `To: ${escapeHtml(describeRecipient(latestMsg))}`
+                    : `From: ${escapeHtml(latestMsg.organizationName ? latestMsg.senderEmail + ' (' + latestMsg.organizationName + ')' : latestMsg.senderEmail)}`;
 
                 tr.innerHTML = `
                     <td>${escapeHtml(latestMsg.subject || 'No Subject')}</td>
-                    <td>From: ${senderText}</td>
+                    <td>${fromOrTo}</td>
                     <td>${new Date(latestMsg.createdAt).toLocaleString()}</td>
                     <td><button class="btn-primary view-btn small" data-thread="${latestMsg.threadId}">View Thread</button></td>
                 `;
@@ -135,6 +150,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.error('Error loading inbox:', error);
             inboxTableBody.innerHTML = '<tr><td class="text-center text-red" colspan="4">Failed to load messages.</td></tr>';
         }
+    }
+
+    // who a message I sent went to, in words
+    function describeRecipient(msg) {
+        if (msg.recipientEmail) return msg.recipientEmail;
+        if (role === 'STUDENT') return 'Organization admin';
+        if (role === 'ORG_ADMIN') return 'System admin';
+        return msg.organizationName ? msg.organizationName + ' admin' : 'Organization admin';
     }
 
     async function openThread(threadId) {
@@ -202,8 +225,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             await openThread(currentThreadId); // Reload thread
 
         } catch (error) {
+            // ApiClient already showed the error message
             console.error('Error sending reply:', error);
-            alert('Failed to send reply. Please try again.');
         } finally {
             sendReplyBtn.disabled = false;
             sendReplyBtn.textContent = 'Send Reply';
@@ -252,7 +275,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const orgSelect = document.getElementById('composeToOrg');
             orgId = orgSelect ? orgSelect.value : null;
             if (!orgId) {
-                alert('Please select an organization.');
+                Toast.error('Please select an organization.');
                 return;
             }
         }
@@ -271,12 +294,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             composeModal.style.display = 'none';
             composeForm.reset();
-            alert('Message sent successfully!');
+            Toast.success('Message sent.');
             await loadInbox();
 
         } catch (error) {
+            // ApiClient already showed the error message
             console.error('Error composing message:', error);
-            alert('Failed to send message. Please try again.');
         } finally {
             submitBtn.disabled = false;
             submitBtn.textContent = 'Send Message';

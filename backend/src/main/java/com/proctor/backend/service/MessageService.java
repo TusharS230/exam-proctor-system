@@ -30,7 +30,19 @@ public class MessageService {
     public MessageResponse sendMessage(User detachedUser, MessageSendRequest request) {
         User currentUser = userRepository.findById(detachedUser.getId())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        
+
+        if (request.getContent() == null || request.getContent().isBlank()) {
+            throw new IllegalArgumentException("Message cannot be empty");
+        }
+
+        // replying: you must already be part of the conversation
+        if (request.getThreadId() != null) {
+            List<Message> existing = messageRepository.findByThreadIdOrderByCreatedAtAsc(request.getThreadId());
+            if (existing.isEmpty() || existing.stream().noneMatch(message -> canSee(currentUser, message))) {
+                throw new org.springframework.security.access.AccessDeniedException("You are not part of this conversation");
+            }
+        }
+
         Message.MessageBuilder messageBuilder = Message.builder()
                 .sender(currentUser)
                 .content(request.getContent())
@@ -72,10 +84,17 @@ public class MessageService {
                 }
                 Message root = threadMessages.get(0);
                 messageBuilder.subject(root.getSubject());
-                
-                // Reply to the org admin's inbox
-                messageBuilder.organization(root.getOrganization());
-                messageBuilder.recipient(null); 
+
+                // Reply to the org admin's inbox. If an org admin started this thread,
+                // the root message has no organization set, so use the sender's organization.
+                com.proctor.backend.model.Organization targetOrg = root.getOrganization() != null
+                        ? root.getOrganization()
+                        : root.getSender().getOrganization();
+                if (targetOrg == null) {
+                    throw new IllegalStateException("Cannot find which organization this thread belongs to.");
+                }
+                messageBuilder.organization(targetOrg);
+                messageBuilder.recipient(null);
             } else {
                 if (request.getOrganizationId() == null) {
                     throw new IllegalArgumentException("Organization ID is required when Super Admin starts a new thread.");
@@ -129,19 +148,55 @@ public class MessageService {
                 .stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 
-    public List<MessageResponse> getThread(User currentUser, UUID threadId) {
-        // Need to add security check here eventually to ensure user is part of thread
-        return messageRepository.findByThreadIdOrderByCreatedAtAsc(threadId)
-                .stream().map(this::mapToResponse).collect(Collectors.toList());
+    public List<MessageResponse> getThread(User detachedUser, UUID threadId) {
+        User currentUser = userRepository.findById(detachedUser.getId())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        List<Message> messages = messageRepository.findByThreadIdOrderByCreatedAtAsc(threadId);
+        if (messages.isEmpty()) {
+            throw new com.proctor.backend.exception.ResourceNotFoundException("Thread not found");
+        }
+        // only people who are part of the conversation may read it
+        boolean allowed = messages.stream().anyMatch(message -> canSee(currentUser, message));
+        if (!allowed) {
+            throw new org.springframework.security.access.AccessDeniedException("You are not part of this conversation");
+        }
+
+        return messages.stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 
-    public void markAsRead(User currentUser, UUID messageId) {
+    public void markAsRead(User detachedUser, UUID messageId) {
+        User currentUser = userRepository.findById(detachedUser.getId())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
         Message message = messageRepository.findById(messageId)
-                .orElseThrow(() -> new IllegalArgumentException("Message not found"));
-        
-        // Mark read
+                .orElseThrow(() -> new com.proctor.backend.exception.ResourceNotFoundException("Message not found"));
+
+        // you can only mark messages that were sent to you (or to your inbox)
+        if (!canSee(currentUser, message) || message.getSender().getId().equals(currentUser.getId())) {
+            throw new org.springframework.security.access.AccessDeniedException("You cannot change this message");
+        }
+
         message.setRead(true);
         messageRepository.save(message);
+    }
+
+    // true when this user sent the message or it was delivered to them / their inbox
+    private boolean canSee(User user, Message message) {
+        if (message.getSender().getId().equals(user.getId())) {
+            return true;
+        }
+        if (message.getRecipient() != null) {
+            return message.getRecipient().getId().equals(user.getId());
+        }
+        // no single recipient: it went to an inbox
+        if (message.getOrganization() != null) {
+            // an organization's inbox, read by that organization's admin
+            return user.getRole() == UserRole.ORG_ADMIN
+                    && user.getOrganization() != null
+                    && user.getOrganization().getId().equals(message.getOrganization().getId());
+        }
+        // the system admin's inbox
+        return user.getRole() == UserRole.SUPER_ADMIN;
     }
 
     private MessageResponse mapToResponse(Message message) {
