@@ -42,6 +42,8 @@ public class ExamService {
         Organization organization = organizationRepository.findByTenantSlug(tenantSlug)
                 .orElseThrow(() -> new ResourceNotFoundException("Organization not found for tenant: " + tenantSlug));
 
+        validateExamRequest(request);
+
         // initialize the parent exam entity
         Exam exam = Exam.builder()
                 .title(request.getTitle())
@@ -50,19 +52,11 @@ public class ExamService {
                 .organization(organization)
                 .build();
 
-        if (request.getScheduledStartTime() != null && !request.getScheduledStartTime().isEmpty()) {
-            try {
-                exam.setScheduledStartTime(java.time.OffsetDateTime.parse(request.getScheduledStartTime()));
-            } catch(Exception e) {
-                log.error("Failed to parse start time", e);
-            }
-        }
-        if (request.getScheduledEndTime() != null && !request.getScheduledEndTime().isEmpty()) {
-            try {
-                exam.setScheduledEndTime(java.time.OffsetDateTime.parse(request.getScheduledEndTime()));
-            } catch(Exception e) {
-                log.error("Failed to parse end time", e);
-            }
+        exam.setScheduledStartTime(parseTime(request.getScheduledStartTime(), "start time"));
+        exam.setScheduledEndTime(parseTime(request.getScheduledEndTime(), "end time"));
+        if (exam.getScheduledStartTime() != null && exam.getScheduledEndTime() != null
+                && !exam.getScheduledEndTime().isAfter(exam.getScheduledStartTime())) {
+            throw new IllegalArgumentException("The end time must be after the start time");
         }
 
         // process the nested question safely
@@ -127,6 +121,8 @@ public class ExamService {
             return allExams.stream()
                     .filter(exam -> exam.getAssignedStudents() != null && exam.getAssignedStudents().stream().anyMatch(student -> student.getId().equals(currentUser.getId())))
                     .filter(exam -> attemptRepository.findByStudentIdAndExamId(currentUser.getId(), exam.getId()).isEmpty())
+                    // closed exams are not shown to students
+                    .filter(exam -> !"PAST".equals(exam.getStatus()))
                     .filter(exam -> exam.getScheduledEndTime() == null || !exam.getScheduledEndTime().isBefore(now))
                     .collect(java.util.stream.Collectors.toList());
         }
@@ -180,5 +176,53 @@ public class ExamService {
         Exam exam = getExamById(examId);
         exam.setStatus(newStatus.toUpperCase());
         return examRepository.save(exam);
+    }
+
+    // basic checks so a broken exam (for example a question with no correct answer) is never saved
+    private void validateExamRequest(CreateExamRequest request) {
+        if (request.getTitle() == null || request.getTitle().isBlank()) {
+            throw new IllegalArgumentException("Exam title is required");
+        }
+        if (request.getDurationMinutes() == null || request.getDurationMinutes() < 1) {
+            throw new IllegalArgumentException("Duration must be at least 1 minute");
+        }
+        if (request.getQuestions() == null || request.getQuestions().isEmpty()) {
+            throw new IllegalArgumentException("Add at least one question");
+        }
+
+        int number = 1;
+        for (QuestionDto question : request.getQuestions()) {
+            String label = "Question " + number++;
+            if (question.getQuestionText() == null || question.getQuestionText().isBlank()) {
+                throw new IllegalArgumentException(label + ": question text is required");
+            }
+            if (question.getQuestionType() == null) {
+                throw new IllegalArgumentException(label + ": question type is required");
+            }
+            if (question.getMarks() == null || question.getMarks() < 1) {
+                throw new IllegalArgumentException(label + ": marks must be at least 1");
+            }
+            if (question.getQuestionType() == com.proctor.backend.model.QuestionType.MULTIPLE_CHOICE) {
+                List<String> options = question.getOptions();
+                if (options == null || options.size() < 2) {
+                    throw new IllegalArgumentException(label + ": add at least two options");
+                }
+                if (question.getCorrectAnswer() == null || !options.contains(question.getCorrectAnswer())) {
+                    throw new IllegalArgumentException(label + ": the correct answer must be one of the options");
+                }
+            }
+        }
+    }
+
+    // turns an ISO date-time string from the browser into OffsetDateTime (null when empty)
+    private java.time.OffsetDateTime parseTime(String value, String fieldName) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            return java.time.OffsetDateTime.parse(value);
+        } catch (java.time.format.DateTimeParseException e) {
+            throw new IllegalArgumentException("Invalid " + fieldName + ": " + value);
+        }
     }
 }

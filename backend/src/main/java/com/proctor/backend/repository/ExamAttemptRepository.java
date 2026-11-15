@@ -14,6 +14,9 @@ import java.util.List;
 public interface ExamAttemptRepository extends JpaRepository<ExamAttempt, UUID> {
     Optional<ExamAttempt> findByStudentIdAndExamId(UUID studentId, UUID examId);
     List<ExamAttempt> findByStatus(AttemptStatus status);
+
+    // the exam a student is currently writing (at most one at a time)
+    Optional<ExamAttempt> findFirstByStudentIdAndStatus(UUID studentId, AttemptStatus status);
     List<ExamAttempt> findByExamOrganizationId(UUID organizationId);
     List<ExamAttempt> findByStudentId(UUID studentId);
 

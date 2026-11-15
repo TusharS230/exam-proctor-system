@@ -32,8 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const tr = document.createElement('tr');
             const date = org.createdAt ? new Date(org.createdAt).toLocaleDateString() : 'N/A';
             tr.innerHTML = `
-                <td>${org.name}</td>
-                <td><span class="tag mono">${org.tenantSlug}</span></td>
+                <td>${escapeHtml(org.name)}</td>
+                <td><span class="tag mono">${escapeHtml(org.tenantSlug)}</span></td>
                 <td>${date}</td>
             `;
             tbody.appendChild(tr);

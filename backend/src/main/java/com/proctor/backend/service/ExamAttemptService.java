@@ -125,9 +125,9 @@ public class ExamAttemptService {
         User student = userRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("user not found"));
 
-        return attemptRepository.findByStatus(AttemptStatus.IN_PROGRESS).stream()
-                .filter(a -> a.getStudent().getId().equals(student.getId()) && a.getExam().getOrganization().getTenantSlug().equals(tenantSlug))
-                .findFirst()
+        // ask the database for this student's running attempt, instead of loading every running attempt
+        return attemptRepository.findFirstByStudentIdAndStatus(student.getId(), AttemptStatus.IN_PROGRESS)
+                .filter(a -> a.getExam().getOrganization().getTenantSlug().equals(tenantSlug))
                 .orElseThrow(() -> new ResourceNotFoundException("No active exam found for this student"));
     }
 

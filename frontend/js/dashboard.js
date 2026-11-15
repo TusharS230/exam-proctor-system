@@ -29,10 +29,10 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             ${alert.studentEmail ? `
             <div class="bold small mb-1">
-                ${alert.studentEmail} - <span class="muted normal">${alert.examTitle || ''}</span>
+                ${escapeHtml(alert.studentEmail)} - <span class="muted normal">${escapeHtml(alert.examTitle || '')}</span>
             </div>` : ''}
             <div class="alert-body">
-                ${alert.details || 'Suspicious activity detected.'}
+                ${escapeHtml(alert.details || 'Suspicious activity detected.')}
             </div>
         `;
 
@@ -124,8 +124,8 @@ document.addEventListener('DOMContentLoaded', () => {
             div.className = 'list-item';
 
             div.innerHTML = `
-                <div class="bold mb-1">${attempt.student?.email || 'Unknown Student'}</div>
-                <div class="small muted">Exam: ${attempt.exam?.title || 'Unknown'}</div>
+                <div class="bold mb-1">${escapeHtml(attempt.student?.email || 'Unknown Student')}</div>
+                <div class="small muted">Exam: ${escapeHtml(attempt.exam?.title || 'Unknown')}</div>
                 <div class="small text-blue mt-1">• In Progress</div>
             `;
             list.appendChild(div);
@@ -148,13 +148,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // The real state of an exam, using its status AND its schedule:
+    // ACTIVE = open now, SCHEDULED = starts later, PAST = closed by the admin or end time passed
+    function getExamState(exam) {
+        if (exam.status === 'PAST') return 'PAST';
+        const now = new Date();
+        if (exam.scheduledStartTime && new Date(exam.scheduledStartTime) > now) return 'SCHEDULED';
+        if (exam.scheduledEndTime && new Date(exam.scheduledEndTime) < now) return 'PAST';
+        return 'ACTIVE';
+    }
+
     function renderFilteredExams() {
         const filterDropdown = document.getElementById('examsStatusFilter');
         const filterVal = filterDropdown ? filterDropdown.value : 'ACTIVE';
 
         let filteredExams = allExams;
         if (filterVal !== 'ALL') {
-            filteredExams = allExams.filter(e => e.status === filterVal);
+            filteredExams = allExams.filter(e => getExamState(e) === filterVal);
         }
         renderExams(filteredExams);
     }
@@ -171,13 +181,19 @@ document.addEventListener('DOMContentLoaded', () => {
         exams.forEach(exam => {
             const div = document.createElement('div');
             div.className = 'list-item';
-            if (exam.status === 'PAST') div.classList.add('closed');
+            const state = getExamState(exam);
+            if (state === 'PAST') div.classList.add('closed');
 
             let actionBtn = '';
-            if (exam.status === 'ACTIVE') {
+            if (exam.status === 'PAST') {
+                // closed by the admin: can be opened again
+                actionBtn = `<button class="btn-primary toggle-status-btn small" data-id="${exam.id}" data-action="ACTIVE">Re-open</button>`;
+            } else if (state === 'PAST') {
+                // end time has passed: nothing to do
+                actionBtn = `<span class="small muted">Ended</span>`;
+            } else {
+                // open now or starting later: the admin can close it
                 actionBtn = `<button class="btn-danger toggle-status-btn small" data-id="${exam.id}" data-action="PAST">Close Exam</button>`;
-            } else if (exam.status === 'SCHEDULED' || exam.status === 'PAST') {
-                actionBtn = `<button class="btn-primary toggle-status-btn small" data-id="${exam.id}" data-action="ACTIVE">Activate</button>`;
             }
 
             let timeInfo = `<div class="small muted">Duration: ${exam.durationMinutes} mins</div>`;
@@ -191,7 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
             div.innerHTML = `
                 <div class="flex space-between align-start">
                     <div>
-                        <div class="bold mb-1">${exam.title}</div>
+                        <div class="bold mb-1">${escapeHtml(exam.title)}</div>
                         ${timeInfo}
                     </div>
                     <div>${actionBtn}</div>

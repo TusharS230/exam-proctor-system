@@ -83,12 +83,5 @@
     <script src="js/api.js"></script>
     <script src="js/student-sidebar.js"></script>
     <script src="js/student-dashboard.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const tenant = sessionStorage.getItem('tenant_id') || 'tenant';
-            const sidebarTenant = document.getElementById('studentTenantSidebar');
-            if (sidebarTenant) sidebarTenant.textContent = tenant;
-        });
-    </script>
 </body>
 </html>

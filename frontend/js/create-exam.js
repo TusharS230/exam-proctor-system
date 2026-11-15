@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     div.innerHTML = `
                         <label class="flex align-center gap-1">
                             <input type="checkbox" class="student-checkbox" value="${student.id}" checked>
-                            <span>${student.email}</span>
+                            <span>${escapeHtml(student.email)}</span>
                         </label>
                     `;
                     container.appendChild(div);
@@ -148,6 +148,42 @@ document.addEventListener('DOMContentLoaded', () => {
         updateTotalMarks();
     }
 
+    // returns a message describing the first mistake in the form, or null if it is fine
+    function findProblem(questions, start, end, duration) {
+        if (!duration || duration < 1) {
+            return 'Duration must be at least 1 minute.';
+        }
+        if (start && end && new Date(end) <= new Date(start)) {
+            return 'The end time must be after the start time.';
+        }
+        if (questions.length === 0) {
+            return 'Add at least one question.';
+        }
+        for (let i = 0; i < questions.length; i++) {
+            const q = questions[i];
+            const label = `Question ${i + 1}`;
+            if (!q.questionText.trim()) {
+                return `${label}: the question text is empty.`;
+            }
+            if (!q.marks || q.marks < 1) {
+                return `${label}: marks must be at least 1.`;
+            }
+            if (q.questionType === 'MULTIPLE_CHOICE') {
+                const filled = q.options;
+                if (filled.length < 2) {
+                    return `${label}: add at least two options.`;
+                }
+                if (new Set(filled.map(opt => opt.trim().toLowerCase())).size !== filled.length) {
+                    return `${label}: two options have the same text.`;
+                }
+                if (!q.correctAnswer || !q.correctAnswer.trim()) {
+                    return `${label}: select the correct option.`;
+                }
+            }
+        }
+        return null;
+    }
+
     // Add one question by default
     addQuestion();
 
@@ -178,7 +214,8 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (qType === 'MULTIPLE_CHOICE') {
                 const optionElems = block.querySelectorAll('.mc-option');
                 optionElems.forEach(opt => {
-                    const text = opt.querySelector('.mc-option-text').value;
+                    const text = opt.querySelector('.mc-option-text').value.trim();
+                    if (text === '') return; // skip empty option boxes
                     options.push(text);
                     if (opt.querySelector('.mc-correct-radio').checked) {
                         correctAnswer = text;
@@ -194,6 +231,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 options: options
             });
         });
+
+        // check the form before sending it
+        const problem = findProblem(questions, scheduledStartTime, scheduledEndTime, parseInt(durationMinutes));
+        if (problem) {
+            Toast.error(problem);
+            return;
+        }
 
         const payload = {
             title,

@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 div.className = 'exam-card';
                 div.innerHTML = `
                     <div class="exam-info">
-                        <h3>${item.examTitle}</h3>
+                        <h3>${escapeHtml(item.examTitle)}</h3>
                         <p>${item.isMissed ? 'Expired on' : 'Completed on'}: ${item.dateStr}</p>
                     </div>
                     <div class="flex align-center gap-2">
@@ -165,9 +165,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                     container.innerHTML += `
                         <div class="answer-block">
-                            <div class="bold mb-1">Q${index + 1}: ${q.questionText}</div>
+                            <div class="bold mb-1">Q${index + 1}: ${escapeHtml(q.questionText)}</div>
                             <div class="small muted mb-1">Your Answer:</div>
-                            <div class="answer-text">${providedAns}</div>
+                            <div class="answer-text">${escapeHtml(providedAns)}</div>
 
                             <div class="flex align-center space-between">
                                 <div>

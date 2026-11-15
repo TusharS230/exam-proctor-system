@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             else if (avg < 50) scoreClass = 'score-low';
 
             tr.innerHTML = `
-                <td class="bold">${group.title}</td>
+                <td class="bold">${escapeHtml(group.title)}</td>
                 <td>${group.attempts.length}</td>
                 <td class="${scoreClass}">${avg}%</td>
                 <td><button class="btn-primary view-btn small">View Details</button></td>
@@ -179,7 +179,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             tr.innerHTML = `
-                <td>${attempt.student?.email || 'Unknown'}</td>
+                <td>${escapeHtml(attempt.student?.email || 'Unknown')}</td>
                 <td class="${scoreClass}">${scoreText}</td>
                 <td><span class="tag">${attempt.status}</span></td>
                 <td class="muted">${date}</td>
@@ -237,7 +237,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                         <span class="muted small">${time}</span>
                                     </div>
                                     <div class="small">
-                                        ${log.details}
+                                        ${escapeHtml(log.details)}
                                     </div>
                                 </div>
                             `;
@@ -289,9 +289,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                     container.innerHTML += `
                         <div class="answer-block">
-                            <div class="bold mb-1">Q${index + 1}: ${q.questionText}</div>
+                            <div class="bold mb-1">Q${index + 1}: ${escapeHtml(q.questionText)}</div>
                             <div class="small muted mb-1">Provided Answer:</div>
-                            <div class="answer-text">${providedAns}</div>
+                            <div class="answer-text">${escapeHtml(providedAns)}</div>
 
                             <div class="flex align-center space-between">
                                 <div>

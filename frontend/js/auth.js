@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
 
         const email = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value.trim();
+        const password = document.getElementById('password').value; // passwords are not trimmed: spaces can be part of them
 
         const submitBtn = loginForm.querySelector('button[type="submit"]');
         const originalText = submitBtn.textContent;
@@ -14,6 +14,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const data = await ApiClient.post('/auth/login', { email, password });
+            if (!data || !data.token) {
+                throw new Error('Login failed');
+            }
 
             // Save token and tenant to sessionStorage
             sessionStorage.setItem('jwt_token', data.token);

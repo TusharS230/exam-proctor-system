@@ -65,10 +65,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             msgDiv.innerHTML = `
                 <div class="small mb-1">
-                    <strong>${senderName}</strong> • ${timeString}
+                    <strong>${escapeHtml(senderName)}</strong> • ${timeString}
                 </div>
                 <div>
-                    ${newMsg.content.replace(/\n/g, '<br>')}
+                    ${escapeHtml(newMsg.content).replace(/\n/g, '<br>')}
                 </div>
             `;
             threadMessagesContainer.appendChild(msgDiv);
@@ -114,10 +114,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const tr = document.createElement('tr');
                 if (!latestMsg.read) tr.classList.add('bold');
 
-                const senderText = latestMsg.organizationName ? `${latestMsg.senderEmail} (${latestMsg.organizationName})` : latestMsg.senderEmail;
+                const senderText = latestMsg.organizationName ? `${escapeHtml(latestMsg.senderEmail)} (${escapeHtml(latestMsg.organizationName)})` : latestMsg.senderEmail;
 
                 tr.innerHTML = `
-                    <td>${latestMsg.subject || 'No Subject'}</td>
+                    <td>${escapeHtml(latestMsg.subject || 'No Subject')}</td>
                     <td>From: ${senderText}</td>
                     <td>${new Date(latestMsg.createdAt).toLocaleString()}</td>
                     <td><button class="btn-primary view-btn small" data-thread="${latestMsg.threadId}">View Thread</button></td>
@@ -164,9 +164,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 msgDiv.innerHTML = `
                     <div class="small mb-1">
-                        <b>${isMe ? 'You' : (msg.organizationName ? msg.senderEmail + ' (' + msg.organizationName + ')' : msg.senderEmail)}</b> - ${new Date(msg.createdAt).toLocaleString()}
+                        <b>${isMe ? 'You' : escapeHtml(msg.organizationName ? msg.senderEmail + ' (' + msg.organizationName + ')' : msg.senderEmail)}</b> - ${new Date(msg.createdAt).toLocaleString()}
                     </div>
-                    <div class="pre-wrap">${msg.content}</div>
+                    <div class="pre-wrap">${escapeHtml(msg.content).replace(/\n/g, '<br>')}</div>
                 `;
                 threadMessagesContainer.appendChild(msgDiv);
             });

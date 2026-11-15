@@ -52,13 +52,24 @@ class ApiClient {
         return headers;
     }
 
+    // log out: forget the session, close the live connection, go back to the login page
+    static logout() {
+        if (window.proctorWS) {
+            window.proctorWS.disconnect();
+        }
+        sessionStorage.clear();
+        window.location.href = 'index.html';
+    }
+
+    // options.silent = true hides the error toast (the page shows its own message instead)
     static async request(endpoint, options = {}) {
         const url = `${this.BASE_URL}${endpoint}`;
+        const { silent, ...fetchOptions } = options;
         const config = {
-            ...options,
+            ...fetchOptions,
             headers: {
                 ...this.getHeaders(),
-                ...options.headers
+                ...fetchOptions.headers
             }
         };
 
@@ -66,11 +77,10 @@ class ApiClient {
         try {
             const response = await fetch(url, config);
 
-            if (response.status === 401) {
-                // Unauthorized, clear tokens and redirect to login
-                sessionStorage.removeItem('jwt_token');
-                sessionStorage.removeItem('tenant_id');
-                window.location.href = 'index.html';
+            // 401 means the session is missing or expired: go back to login.
+            // (Not for the login request itself, where 401 just means a wrong password.)
+            if (response.status === 401 && !endpoint.startsWith('/auth/')) {
+                this.logout();
                 return null;
             }
 
@@ -94,7 +104,7 @@ class ApiClient {
 
         } catch (error) {
             console.error('API Request Error:', error);
-            if (window.Toast) {
+            if (window.Toast && !silent) {
                 window.Toast.error(error.message || 'Network error. Please try again.');
             }
             throw error;
@@ -121,6 +131,35 @@ class ApiClient {
 }
 
 window.ApiClient = ApiClient;
+
+// Makes user-typed text safe to put inside innerHTML,
+// so a message like "<script>..." is shown as text instead of being run.
+window.escapeHtml = function(value) {
+    if (value === null || value === undefined) return '';
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+};
+
+// Every page except the login page needs a logged-in user
+(function requireLogin() {
+    const page = window.location.pathname.split('/').pop();
+    const isLoginPage = page === '' || page === 'index' || page === 'index.html';
+    if (!isLoginPage && !sessionStorage.getItem('jwt_token')) {
+        window.location.href = 'index.html';
+    }
+})();
+
+// Any button with id="logoutBtn" logs the user out
+document.addEventListener('DOMContentLoaded', () => {
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => ApiClient.logout());
+    }
+});
 
 // Global UI Utility
 window.togglePasswordVisibility = function(inputId, btn) {
@@ -149,7 +188,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const path = window.location.pathname;
             const isStudentPage = path.includes('student-');
             const isSuperAdminPage = path.includes('super-admin') || path.includes('organizations') || path.includes('onboard-tenant');
-            const isSettingsPage = path.includes('settings') && !path.includes('super-admin-settings');
+            const isOrgSettingsPage = /(^|\/)settings(\.html)?$/.test(path);
             const isAuthPage = path.includes('index') || path === '/' || path.endsWith('/');
 
             if (!isAuthPage) {
@@ -161,8 +200,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     window.location.href = path.includes('settings') ? 'settings.html' : 'dashboard.html';
                     return;
                 }
-                if (user.role === 'SUPER_ADMIN' && !isSuperAdminPage && !isSettingsPage) {
-                    window.location.href = 'super-admin.html';
+                if (user.role === 'SUPER_ADMIN' && !isSuperAdminPage) {
+                    window.location.href = isOrgSettingsPage ? 'super-admin-settings.html' : 'super-admin.html';
                     return;
                 }
             }
@@ -192,7 +231,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <div class="profile-modal-header">
                             <div class="profile-modal-avatar">${letter}</div>
                             <div>
-                                <h2 class="m-0 large truncate max-w-250">${user.email}</h2>
+                                <h2 class="m-0 large truncate max-w-250">${escapeHtml(user.email)}</h2>
                                 <p class="m-0 muted capitalize">${role.replace('_', ' ').toLowerCase()}</p>
                             </div>
                         </div>
@@ -251,7 +290,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         }
                     });
                 });
-                window.proctorWS.connect(token, tenant);
+                window.proctorWS.connect(token, sessionStorage.getItem('tenant_id'));
             }
         }
     } catch(e) {

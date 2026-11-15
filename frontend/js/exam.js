@@ -5,18 +5,24 @@ document.addEventListener('DOMContentLoaded', () => {
     async function initExam() {
         const token = sessionStorage.getItem('jwt_token');
         if (!token) {
-            alert("No authentication token found. Please log in.");
             window.location.href = "index.html";
             return;
         }
 
+        // 1. Fetch the attempt this student has in progress
+        let attempt = null;
         try {
-            // 1. Fetch active attempt
-            const attempt = await ApiClient.get('/attempts/my-active');
-            if (!attempt) {
-                document.getElementById('examQuestionsContainer').innerHTML = "<div class='padded text-center'>No active exams found for you.</div>";
-                return;
-            }
+            attempt = await ApiClient.get('/attempts/my-active', { silent: true });
+        } catch (e) {
+            attempt = null;
+        }
+        if (!attempt) {
+            document.getElementById('examQuestionsContainer').innerHTML =
+                "<p class='text-center mt-3'>You have no exam in progress. <a href='student-active-exams.html'>See available exams</a></p>";
+            return;
+        }
+
+        try {
 
             window.currentAttemptId = attempt.id;
 
@@ -93,8 +99,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 q.options.forEach((opt, idx) => {
                     optionsHtml += `
                         <label class="block mb-1">
-                            <input type="radio" name="student_mc_${q.id}" class="mc-radio-input" data-qid="${q.id}" value="${opt.replace(/"/g, '&quot;')}">
-                            ${opt}
+                            <input type="radio" name="student_mc_${q.id}" class="mc-radio-input" data-qid="${q.id}" value="${escapeHtml(opt)}">
+                            ${escapeHtml(opt)}
                         </label>
                     `;
                 });
@@ -111,12 +117,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
             qCard.innerHTML = `
                 <span class="question-number">Question ${index + 1}</span>
-                <div class="question-text">${q.questionText} [${q.marks} Marks]</div>
+                <div class="question-text">${escapeHtml(q.questionText)} [${q.marks} Marks]</div>
                 ${answerInputHTML}
             `;
             container.appendChild(qCard);
         });
     }
+
+    // warn the student before they close or reload the page during the exam
+    window.addEventListener('beforeunload', (e) => {
+        if (examIsActive) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
 
     // Submit logic
     document.getElementById('submitExamBtn').addEventListener('click', () => {
@@ -125,8 +139,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    let isSubmitting = false;
+
     async function submitExam() {
-        if (!examIsActive) return;
+        // ignore a second click (or the timer firing) while a submit is already running
+        if (!examIsActive || isSubmitting) return;
+        isSubmitting = true;
+        const submitBtn = document.getElementById('submitExamBtn');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Submitting...';
 
         const attemptId = window.currentAttemptId;
         const answers = [];
@@ -165,8 +186,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.location.href = "student-dashboard.html";
             }, 1500);
         } catch (e) {
+            // ApiClient already showed the error; let the student try again
             console.error(e);
-            Toast.error("Failed to submit exam.");
+            isSubmitting = false;
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit Final Answers';
         }
     }
 

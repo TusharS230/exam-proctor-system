@@ -7,6 +7,7 @@ class ProctorWebSocket {
         this.isConnecting = false;
         this.onConnectCallbacks = [];
         this.onDisconnectCallbacks = [];
+        this.stopped = false; // true after logout or exam submit, so we don't reconnect
     }
 
     resolveWsUrl() {
@@ -27,6 +28,7 @@ class ProctorWebSocket {
         if (this.isConnected || this.isConnecting) {
             return;
         }
+        this.stopped = false;
 
         if (typeof SockJS === 'undefined' || typeof Stomp === 'undefined') {
             console.warn("SockJS or Stomp library is not loaded.");
@@ -62,13 +64,18 @@ class ProctorWebSocket {
                     try { cb(error); } catch(e) { console.error("Error in onDisconnect callback:", e); }
                 });
 
-                // Implement basic retry logic
-                setTimeout(() => this.connect(token, tenantId), 5000);
+                // try again in 5 seconds, unless we disconnected on purpose or logged out
+                setTimeout(() => {
+                    if (!this.stopped && sessionStorage.getItem('jwt_token')) {
+                        this.connect(token, tenantId);
+                    }
+                }, 5000);
             }
         );
     }
 
     disconnect() {
+        this.stopped = true;
         if (this.stompClient !== null && this.isConnected) {
             this.stompClient.disconnect(() => {
                 this.isConnected = false;

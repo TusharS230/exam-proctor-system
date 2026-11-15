@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (stats.count === 0) scoreClass = '';
 
             tr.innerHTML = `
-                <td>${student.email}</td>
+                <td>${escapeHtml(student.email)}</td>
                 <td class="muted">${date}</td>
                 <td class="${statusClass}"><span class="tag">${statusText}</span></td>
                 <td class="bold">${stats.count}</td>

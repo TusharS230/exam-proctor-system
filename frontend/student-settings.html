@@ -102,18 +102,5 @@
     <script src="js/api.js"></script>
     <script src="js/student-sidebar.js"></script>
     <script src="js/settings.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const tenant = sessionStorage.getItem('tenant_id') || 'tenant';
-            const sidebarTenant = document.getElementById('studentTenantSidebar');
-            if (sidebarTenant) sidebarTenant.textContent = tenant;
-        });
-
-        document.getElementById('logoutBtn').addEventListener('click', () => {
-            sessionStorage.removeItem('jwt_token');
-            sessionStorage.removeItem('tenant_id');
-            window.location.href = 'index.html';
-        });
-    </script>
 </body>
 </html>
