@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
             } else {
                 answerInputHTML = `
-                    <textarea class="form-control student-answer-input" data-qid="${q.id}" rows="4" placeholder="Write your response..."></textarea>
+                    <textarea class="form-control student-answer-input" data-qid="${q.id}" rows="4" placeholder="Type your answer"></textarea>
                 `;
             }
 

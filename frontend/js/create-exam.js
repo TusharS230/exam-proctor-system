@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <div class="mb-2">
                 <label class="block mb-1">Question Text</label>
-                <textarea class="form-input q-text" required rows="2"></textarea>
+                <textarea class="form-input q-text" required rows="2" placeholder="Enter the question"></textarea>
             </div>
             <div class="flex gap-2 mb-2">
                 <div class="grow">
@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <div class="answer-section hidden">
                 <label class="block mb-1">Correct Answer (Required for evaluation)</label>
-                <input type="text" class="form-input q-answer">
+                <input type="text" class="form-input q-answer" placeholder="Enter the expected answer">
             </div>
             <div class="mc-options-section hidden mb-2">
                 <label class="block mb-1 bold">Options (Select the radio button next to the correct answer)</label>
@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             optDiv.innerHTML = `
                 <input type="radio" name="correct_mc_${questionCount}" class="mc-correct-radio" required title="Select as correct answer">
-                <input type="text" class="form-input mc-option-text grow" placeholder="Option text..." required>
+                <input type="text" class="form-input mc-option-text grow" placeholder="Enter option" required>
                 <button type="button" class="remove-opt-btn text-red no-border large">&times;</button>
             `;
 

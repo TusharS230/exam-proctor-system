@@ -61,21 +61,21 @@
                     <form id="onboardForm">
                         <div class="mb-3">
                             <label class="block mb-1 bold">Organization Name</label>
-                            <input type="text" id="orgName" class="form-input" required placeholder="e.g. Stanford University">
+                            <input type="text" id="orgName" class="form-input" required placeholder="Enter organization name">
                         </div>
                         <div class="mb-3">
                             <label class="block mb-1 bold">Tenant Slug</label>
-                            <input type="text" id="orgSlug" class="form-input" required placeholder="e.g. stanford">
+                            <input type="text" id="orgSlug" class="form-input" required placeholder="Lowercase, no spaces">
                             <small class="muted">Used for tenant identification.</small>
                         </div>
                         <h3 class="mt-3 mb-2 line-below">Initial Admin Account</h3>
                         <div class="mb-3">
                             <label class="block mb-1 bold">Admin Email</label>
-                            <input type="email" id="adminEmail" class="form-input" required placeholder="admin@stanford.edu">
+                            <input type="email" id="adminEmail" class="form-input" required placeholder="Enter admin email" autocomplete="off">
                         </div>
                         <div class="mb-3">
                             <label class="block mb-1 bold">Admin Password</label>
-                            <input type="password" id="adminPassword" class="form-input" required>
+                            <input type="password" id="adminPassword" class="form-input" required placeholder="At least 6 characters" autocomplete="new-password" minlength="6">
                         </div>
                         <button type="submit" class="btn-primary full-width" id="createBtn">Create Organization & Admin</button>
                     </form>
